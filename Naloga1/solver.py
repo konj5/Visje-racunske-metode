@@ -24,11 +24,17 @@ def basedwise_scalar_product(i, state, coefs):
 
 
 def finite_differencer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
-    state = np.zeros((len(startstate), nmax), dtype=np.float64)
+    state = np.zeros((len(startstate), nmax), dtype=np.complex128)
     state[:,0] = startstate
     for n in range(1,nmax,1):
+        print(n)
         for m in range(len(startstate)):
+            if m < len(spacewise) or m > len(startstate)-1-len(spacewise):
+                state[m,n]
+                continue
+
             state[m,n] = state[m,n-1] + 1j*tau * (1/h**2 * basedwise_scalar_product(m, state[:,n-1], spacewise) - V[m,n])
+            #state[m,n] = state[m,n-1] + 1j*tau * (1/h**2 * (state[m+1,n-1]-2*state[m,n-1]+state[m-1,n-1]) - V[m,n])
 
     return state
 
@@ -36,16 +42,18 @@ def finite_differencer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
 def finite_propagatorer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
     K = 10
 
-    HmatrixP = np.zeros((len(startstate), len(startstate)), dtype=np.float64)
+    HmatrixP = np.zeros((len(startstate), len(startstate)), dtype=np.complex128)
     ###momentum part
     for i in range(len(spacewise)):
         mid = int(len(spacewise)//2)
-        HmatrixP += -1/2 * 1/h**2 * np.diag(spacewise[i], k=i-mid)
 
-    state = np.zeros((len(startstate), nmax), dtype=np.float64)
+        HmatrixP += -1/2 * 1/h**2 * np.eye(len(startstate), k=i-mid, dtype=float) * spacewise[i]
+
+    state = np.zeros((len(startstate), nmax), dtype=np.complex128)
     state[:,0] = startstate
 
     for n in range(1,nmax,1):
+        print(n)
         for k in range(0,K+1,1):
             #Potential part
             HmatrixV = np.diag(V[:,n])
@@ -56,16 +64,17 @@ def finite_propagatorer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2])
     return state
 
 def implicinator(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
-    HmatrixP = np.zeros((len(startstate), len(startstate)), dtype=np.float64)
+    HmatrixP = np.zeros((len(startstate), len(startstate)), dtype=np.complex128)
     ###momentum part
     for i in range(len(spacewise)):
         mid = int(len(spacewise)//2)
-        HmatrixP += -1/2 * 1/h**2 * np.diag(spacewise[i], k=i-mid)
+        HmatrixP += -1/2 * 1/h**2 * np.eye(len(startstate), k=i-mid, dtype=float) * spacewise[i]
 
-    state = np.zeros((len(startstate), nmax), dtype=np.float64)
+    state = np.zeros((len(startstate), nmax), dtype=np.complex128)
     state[:,0] = startstate
 
     for n in range(1,nmax,1):
+        print(n)
         #Potential part
         HmatrixV = np.diag(V[:,n])
         Hmatrix = HmatrixP + HmatrixV
