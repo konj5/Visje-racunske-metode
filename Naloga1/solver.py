@@ -53,7 +53,7 @@ def finite_propagatorer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2])
     state[:,0] = startstate
 
     for n in range(1,nmax,1):
-        print(n)
+        #print(n)
         for k in range(0,K+1,1):
             #Potential part
             HmatrixV = np.diag(V[:,n])
@@ -74,7 +74,7 @@ def implicinator(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
     state[:,0] = startstate
 
     for n in range(1,nmax,1):
-        print(n)
+        #print(n)
         #Potential part
         HmatrixV = np.diag(V[:,n])
         Hmatrix = HmatrixP + HmatrixV

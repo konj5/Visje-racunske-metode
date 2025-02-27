@@ -22,11 +22,12 @@ L = 15
 dx = 0.1
 dt = 0.001
 
-tmax = 10
+tmax = 30
 nmax = int(tmax/dt)
+duration = 30 #seconds
 
 N = 0
-lamb = 0
+lamb = 2
 
 xs = np.arange(-L,L, dx)
 Vmn = np.zeros((len(xs), nmax))
@@ -39,24 +40,24 @@ spacewise4 = [-1/12, 4/3, -5/3, 4/3, -1/12]
 
 spacewise = spacewise4
 
-"""
+
 #solution = solver.finite_differencer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise)
 #solution = solver.finite_propagatorer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise)
 solution = solver.implicinator(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise)
 
 
-solution = scipy.interpolate.interp1d([i/(nmax-1) * (30*10) for i in range(nmax)], solution, axis=1)([i for i in range(30 * 10)])
+solution = scipy.interpolate.interp1d([i/(nmax-1) * (30*duration) for i in range(nmax)], solution, axis=1)([i for i in range(30 * duration)])
 
 
 def animate(i):
     plt.cla()
     #plt.title(f"Metoda: Končne diference, $h={dx}$, $\\tau={dt}$, $t = {i/(30*10)*nmax * dt:0.3f}$")
     #plt.title(f"Metoda: Končni propagator, $h={dx}$, $\\tau={dt}$, $t = {i/(30*10)*nmax * dt:0.3f}$")
-    plt.title(f"Metoda: Implicitna, $h={dx}$, $\\tau={dt}$, $t = {i/(30*10)*nmax * dt:0.3f}$")
+    plt.title(f"Metoda: Implicitna, $h={dx}$, $\\tau={dt}$, $t = {i/(30*duration)*nmax * dt:0.3f}$")
 
     #i = int(i * nmax/(30*10))
     #print(f"{i}/{nmax}")
-    print(f"{i}/{30*10}")
+    print(f"{i}/{30*duration}")
 
     plt.plot(xs, np.real(solution[:,i])**2, c = "red", label = "Re$\\psi^2$")
     plt.plot(xs, np.imag(solution[:,i])**2, c = "blue", label = "Im$\\psi^2$")
@@ -67,14 +68,14 @@ def animate(i):
 
 fig = plt.figure()
 
-ani = FuncAnimation(fig, animate, frames=30*10, )
+ani = FuncAnimation(fig, animate, frames=30*duration, )
 ani.save('animacija.mp4',  
           writer = 'ffmpeg', fps = 30) 
 print("done")
 #plt.show()
-"""
 
-ts = np.linspace(0,tmax,nmax)
+
+"""ts = np.linspace(0,tmax,nmax)
 solution = solver.finite_propagatorer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise2)
 plt.plot(ts,np.abs(1-np.trapz(np.abs(solution)**2,xs, axis=0)), label="Končni propagator 2.reda")
 
@@ -92,7 +93,9 @@ plt.ylabel("$|1-|\\psi|^2|$")
 plt.xlabel("t")
 plt.yscale("log")
 plt.legend()
-plt.show()
+plt.show()"""
+
+
 
 
 
