@@ -1,1 +1,0 @@
-povej več o tem kako si implementiral metode (še posebej ta dobri dve!)

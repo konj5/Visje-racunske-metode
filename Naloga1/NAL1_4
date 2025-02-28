@@ -1,0 +1,125 @@
+import numpy as np
+import scipy
+import matplotlib.pyplot as plt
+from matplotlib import cm, colors
+import scipy.integrate
+import scipy.interpolate
+import scipy.special
+from tqdm import tqdm
+import re, sys
+from matplotlib.animation import FuncAnimation
+
+
+h = 0.05
+L = 2.5
+lamb = 0
+
+dt = h**2/4
+
+Nx = int(L/h)+1
+Nt = 500
+
+print(f"tmax = {dt * Nt}")
+
+Ni = (Nx-2)*(Nx-2)
+
+A = np.zeros((Ni,Ni), complex)
+M = np.zeros((Ni,Ni), complex)
+
+rx = -dt/(2j*h**2)/2
+ry = rx
+
+def vfunc(i,j):
+    return 1/2 * h**2 * (i**2 + j**2) + lamb * (i*j)**2
+
+v = np.fromfunction(vfunc, (Nx,Nx), dtype=complex)
+
+print("done V")
+for k in range(Ni):     
+
+    i = 1 + k//(Nx-2)
+    j = 1 + k%(Nx-2)
+    
+    A[k,k] = 1 + 2*rx + 2*ry + 1j*dt/2*v[i,j]
+    M[k,k] = 1 - 2*rx - 2*ry - 1j*dt/2*v[i,j]
+    
+    if i != 1:
+        A[k,(i-2)*(Nx-2)+j-1] = -ry 
+        M[k,(i-2)*(Nx-2)+j-1] = ry
+        
+    if i != Nx-2:
+        A[k,i*(Nx-2)+j-1] = -ry
+        M[k,i*(Nx-2)+j-1] = ry
+    
+    if j != 1:
+        A[k,k-1] = -rx 
+        M[k,k-1] = rx 
+
+    if j != Nx-2:
+        A[k,k+1] = -rx
+        M[k,k+1] = rx
+
+print("done matrix")
+
+
+from scipy.sparse import csc_matrix
+from scipy.sparse.linalg import spsolve
+
+Asp = csc_matrix(A)
+
+xs = np.linspace(-L, L, Nx-2)
+xs, ys = np.meshgrid(xs, xs)
+
+psis = []
+
+def psi0(x, y, x0, y0):
+    return 1/np.pi**(1/2) * np.exp(-(x-x0)**2/2-(y-y0)**2/2)
+
+psi = psi0(xs, ys, 0, 0)
+psi[0,:] = psi[-1,:] = psi[:,0] = psi[:,-1] = 0
+psis.append(np.copy(psi))
+
+
+for i in range(1,Nt):
+    print(f"\rSolving {i}/{Nt}", end="      ")
+    psi_vect = psi.reshape((Ni))
+    b = np.matmul(M,psi_vect)
+    psi_vect = spsolve(Asp,b)
+    psi = psi_vect.reshape((Nx-2,Nx-2)) 
+    psis.append(np.copy(psi))
+
+
+mod_psis = [] 
+for wavefunc in psis:
+    re = np.real(wavefunc) 
+    im = np.imag(wavefunc) 
+    mod = np.sqrt(re**2 + im**2) 
+    mod_psis.append(mod) 
+
+fig = plt.figure() 
+ax = fig.add_subplot(111, xlim=(-L,L), ylim=(-L,L)) 
+
+img = ax.imshow(mod_psis[0], extent=[-L,L,-L,L], cmap=plt.get_cmap("hot"), vmin=0, vmax=np.max(mod_psis), zorder=1) 
+
+def animate(i):
+    
+    """
+    Animation function. Paints each frame. Function for Matplotlib's 
+    FuncAnimation.
+    """
+    
+    img.set_data(mod_psis[i])
+    img.set_zorder(1)
+    print(f"\rAnimating {i}/{Nt}", end="      ")
+    
+    return img
+
+
+anim = FuncAnimation(fig, animate, interval=1, frames =np.arange(0,Nt,2), repeat=False, blit=0)
+
+
+anim.save('./animationsName.mp4', writer="ffmpeg", fps=60)
+
+
+
+

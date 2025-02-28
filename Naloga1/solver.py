@@ -53,13 +53,18 @@ def finite_propagatorer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2])
     state[:,0] = startstate
 
     for n in range(1,nmax,1):
-        #print(n)
-        for k in range(0,K+1,1):
-            #Potential part
-            HmatrixV = np.diag(V[:,n])
-            Hmatrix = HmatrixP + HmatrixV
+        print(f"{n}/{nmax}")
+        Hk = np.eye(len(startstate))
 
-            state[:,n] += (-1j * tau)**k/scipy.special.factorial(k) * np.linalg.matrix_power(Hmatrix, k).dot(state[:,n-1])
+        #Potential part
+        HmatrixV = np.diag(V[:,n])
+        Hmatrix = HmatrixP + HmatrixV
+
+        
+        for k in range(0,K+1,1):
+
+            state[:,n] += (-1j * tau)**k/scipy.special.factorial(k) * Hk.dot(state[:,n-1])
+            Hk = Hk.dot(Hmatrix)
 
     return state
 
@@ -73,8 +78,10 @@ def implicinator(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
     state = np.zeros((len(startstate), nmax), dtype=np.complex128)
     state[:,0] = startstate
 
+    print("\n")
+
     for n in range(1,nmax,1):
-        #print(n)
+        print(f"\r{n}/{nmax}", end="                 ")
         #Potential part
         HmatrixV = np.diag(V[:,n])
         Hmatrix = HmatrixP + HmatrixV
@@ -87,6 +94,46 @@ def implicinator(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
         state[:,n] = solve(A,b,assume_a="banded")
 
     return state
+
+
+
+def finite_propagatonator2D_single_step(startstate, V, tau, h, tstep, spacewise = [1/2, -1, 1/2]):
+    K = 1
+    state = startstate.copy()
+
+    def H_ij(i,j):
+        ret = 0
+
+        if np.abs(i-j) < len(spacewise)/2:
+            ret += -1/2 * 1/h**2 * spacewise[i-j]
+        
+        if i == j:
+            ret += V[i,j]
+
+        return ret
+    
+    def matrix_vector_multiplication(A,b):
+        bnew = np.zeros_like(b)
+        for i in range(len(b)):
+            for j in range(len(b)):
+                bnew[i] += A(i,j)*b[j]
+        return bnew
+
+    t = 0
+    while t < tstep:
+        print(f"\r{np.round(t,decimals=2):0.2f}/{tstep}", end="            ")
+        t += tau
+        Hkpsi = state.copy()
+        new_state = np.zeros_like(state)
+        for k in range(0,K+1,1):
+            new_state += (-1j * tau)**k/scipy.special.factorial(k) * Hkpsi
+            Hkpsi = matrix_vector_multiplication(H_ij, Hkpsi)
+        state = new_state.copy()
+
+
+    return state
+
+
 
 
 
