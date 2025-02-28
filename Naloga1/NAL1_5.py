@@ -21,7 +21,7 @@ lamb = 0
 
 dt = h**2/4
 
-tmax = 0.5
+tmax = 1
 
 Nx = int(L/h)+1
 Nt = int(tmax/dt)
@@ -42,21 +42,24 @@ for k in range(len(spacewise4)):
 
 Hx = scipy.sparse.block_diag([xblock for _ in range(Nx)])
 
-Hx = Hx * -1/2 * 1/h**2
-Hy = Hy * -1/2 * 1/h**2
+#Hx = Hx * -1/2 * 1/h**2
+#Hy = Hy * -1/2 * 1/h**2
 
-V = np.fromfunction(lambda i, j: 1/2*h**2 * (i**2 + j**2) + lamb * (i*j)**2, (Nx,Nx))
+Hx = Hx * -1/2
+Hy = Hy * -1/2
+
+V = np.fromfunction(lambda i, j: 1/2 * (i**2 + j**2) + lamb *(i*j)**2, (Nx,Nx))
 
 diagonala = np.zeros(Nx*Nx)
 for i in range(1,Nx+1):
-    diagonala[(i-1)*Nx:i*Nx] = V[:,i-1]
+    diagonala[(i-1)*Nx:i*Nx] = V[:,i-1]*h**4
 
 HV += scipy.sparse.diags(diagonala)
 
 H = Hx + Hy + HV
 
-A = csc_matrix(sparse.eye(Nx*Nx) + 1j * dt/2 * H)
-B = csc_matrix(sparse.eye(Nx*Nx) - 1j * dt/2 * H)
+A = csc_matrix(sparse.eye(Nx*Nx) + 1j /2 * H)
+B = csc_matrix(sparse.eye(Nx*Nx) - 1j /2 * H)
 
 xs = np.linspace(-L, L, Nx)
 xs, ys = np.meshgrid(xs, xs)
@@ -66,7 +69,7 @@ psis = []
 def psi0(x, y, x0, y0):
     return 1/np.pi**(1/2) * np.exp(-(x-x0)**2/2-(y-y0)**2/2)
 
-psi = psi0(xs, ys, 1, 0)
+psi = psi0(xs, ys, 2, 0)
 psi[0,:] = psi[-1,:] = psi[:,0] = psi[:,-1] = 0
 psis.append(np.copy(psi))
 
@@ -112,6 +115,8 @@ anim = FuncAnimation(fig, animate, interval=1, frames =np.arange(0,Nt,2), repeat
 
 
 anim.save('./animationsName.mp4', writer="ffmpeg", fps=60)
+
+print("done")
 
 
 
