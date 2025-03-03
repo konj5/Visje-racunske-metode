@@ -27,7 +27,7 @@ def finite_differencer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
     state = np.zeros((len(startstate), nmax), dtype=np.complex128)
     state[:,0] = startstate
     for n in range(1,nmax,1):
-        print(n)
+        #print(n)
         for m in range(len(startstate)):
             if m < len(spacewise) or m > len(startstate)-1-len(spacewise):
                 state[m,n]
@@ -53,7 +53,7 @@ def finite_propagatorer(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2])
     state[:,0] = startstate
 
     for n in range(1,nmax,1):
-        print(f"{n}/{nmax}")
+        #print(f"{n}/{nmax}")
         Hk = np.eye(len(startstate))
 
         #Potential part
@@ -78,7 +78,7 @@ def implicinator(startstate, V, tau, h, nmax, spacewise = [1/2, -1, 1/2]):
     state = np.zeros((len(startstate), nmax), dtype=np.complex128)
     state[:,0] = startstate
 
-    print("\n")
+    #print("\n")
 
     for n in range(1,nmax,1):
         print(f"\r{n}/{nmax}", end="                 ")

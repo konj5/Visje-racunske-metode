@@ -35,7 +35,7 @@ spacewise2 = [1/2, -1, 1/2]
 spacewise4 = [-1/12, 4/3, -5/3, 4/3, -1/12]
 
 
-"""lambs = np.arange(0,4,1)
+lambs = np.arange(0,4,1)
 Ns = np.arange(0,4,1)
 
 sols = np.zeros((len(lambs), len(Ns), len(xs), nmax), dtype=np.complex128)
@@ -75,7 +75,7 @@ for i in tqdm(range(len(lambs))):
         axs[i,j].set_ylabel("t")
 
 fig.tight_layout()
-plt.show()"""
+plt.show()
 
 
 """lambs = [0,0.1]
@@ -122,7 +122,7 @@ plt.savefig("backup.png")
 plt.show()"""
 
 
-lambs = [0,0.1]
+"""lambs = [0,0.1]
 As = [1,10]
 
 sols = np.zeros((len(lambs), len(As), len(xs), nmax), dtype=np.complex128)
@@ -165,7 +165,7 @@ for i in tqdm(range(len(lambs))):
 fig.tight_layout()
 plt.savefig("backup.png")
 plt.show()
-
+"""
 
 
 

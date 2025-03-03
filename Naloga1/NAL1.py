@@ -24,11 +24,11 @@ def coherent_state(d,x):
 
 L = 15
 dx = 0.1
-dt = 0.01
+dt = 0.005
 
-tmax = 10
+tmax = 2
 nmax = int(tmax/dt)
-duration = 30 #seconds
+duration = 10 #seconds
 
 N = 0
 lamb = 0
@@ -45,7 +45,7 @@ spacewise4 = [-1/12, 4/3, -5/3, 4/3, -1/12]
 spacewise = spacewise4
 
 
-#solution = solver.finite_differencer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise)
+"""#solution = solver.finite_differencer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise)
 #solution = solver.finite_propagatorer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise)
 #solution = solver.implicinator(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise)
 
@@ -79,10 +79,10 @@ def animate(i):
 fig = plt.figure()
 
 ani = FuncAnimation(fig, animate, frames=30*duration, )
-ani.save('animacija.mp4',  
+ani.save('animacija_adsadasdasda.mp4',  
           writer = 'ffmpeg', fps = 30) 
 print("done")
-plt.show()
+plt.show()"""
 
 
 """ts = np.linspace(0,tmax,nmax)
@@ -168,6 +168,58 @@ plt.ylabel("Čas računanja[s]")
 #plt.xscale("log")
 plt.legend()
 plt.show()"""
+
+
+ts = np.linspace(0,tmax,nmax)
+
+Ls = np.linspace(1,16,10)
+
+solution1, solution2, solution3, solution4 = [],[],[],[]
+
+for i in range(len(Ls)):
+    print(f"{i}/{len(Ls)}")
+
+    N = 0
+    xs = np.arange(-Ls[i],Ls[i], dx)
+    Vmn = np.zeros((len(xs), nmax))
+    V0 = V(xs,lamb)
+    for i in range(nmax):
+        Vmn[:,i] = V0
+
+    solution = solver.finite_propagatorer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise2)[:,-1]
+    solution1.append(np.abs(1-np.trapz(np.abs(solution)**2,xs)))
+    
+    print(1)
+
+    solution = solver.finite_propagatorer(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise4)[:,-1]
+    solution2.append(np.abs(1-np.trapz(np.abs(solution)**2,xs)))
+    
+
+    print(2)
+
+    solution = solver.implicinator(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise2)[:,-1]
+    solution3.append(np.abs(1-np.trapz(np.abs(solution)**2,xs)))
+    
+
+    print(3)
+
+    solution = solver.implicinator(eigenstate(N,xs), Vmn, dt, dx, nmax, spacewise=spacewise4)[:,-1]
+    solution4.append(np.abs(1-np.trapz(np.abs(solution)**2,xs)))
+    
+
+    print(4)
+
+plt.plot(Ls,solution1, label="Končni propagator 2.reda")
+plt.plot(Ls,solution2, label="Končni propagator 4.reda")
+plt.plot(Ls,solution3, label="implicitna 2.reda")
+plt.plot(Ls,solution4, label="implicitna 4.reda")
+
+
+plt.ylabel("$|1-|\\psi|^2|$")
+plt.xlabel("L")
+plt.yscale("log")
+plt.legend()
+plt.show()
 
 
 

@@ -17,7 +17,7 @@ from scipy.sparse.linalg import spsolve
 
 h = 0.05
 L = 8
-lamb = 0
+lamb = 0.1
 
 dt = h**2/4
 
