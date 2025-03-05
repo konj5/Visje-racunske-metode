@@ -22,8 +22,8 @@ def coherent_state(d,x):
     return eigenstate(0,x-d)
 
 L = 15
-dx = 0.03
-dt = 0.001
+dx = 0.1
+dt = 0.01
 
 tmax = 10
 nmax = int(tmax/dt)

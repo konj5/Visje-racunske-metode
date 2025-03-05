@@ -8,6 +8,8 @@ import scipy.special
 from tqdm import tqdm
 import re, sys
 from matplotlib.animation import FuncAnimation
+np.set_printoptions(edgeitems=30, linewidth=100000, 
+    formatter=dict(float=lambda x: "%.3g" % x))
 
 
 
@@ -19,25 +21,68 @@ def eigenstate(N, x):
 
 
 
-def mat_element(n1,n2,f):
+def mat_element_if_stupid(n1,n2,f):
     xs = np.linspace(-20,20,1000)
     ys = eigenstate(n1,xs) * f(xs) * eigenstate(n2,xs)
 
     return np.trapz(ys,xs)
+
+def val_from_sequence(seq,n1,n2):
+    val = 1
+    for op in seq[::-1]:
+        if op == "b":
+            val *= np.sqrt(n2+1)
+            n2 = n2 +1
+        elif op == "a":
+            val *= np.sqrt(n2)
+            n2 = n2 -1
+            if n2 < 0: return 0
+    if n1 != n2:
+        val = 0
+
+    return val
+
+seqs = ["aaaa", "aaab", "aaba", "aabb",
+        "abaa", "abab", "abba", "abbb",
+        "baaa", "baab", "baba", "babb",
+        "bbaa", "bbab", "bbba", "bbbb"
+        ]
+
+
+
+def mat_element(n1,n2,f):
+
+    val = 0
+    for seq in seqs:
+        val += val_from_sequence(seq,n1,n2)
+
+    val = val / 2**4
+
+    return val
 
 def mat_element_fsymmetric(n1,n2,f):
     if np.logical_xor(n1 % 2 == 1, n2 % 2 == 1): return 0
-    xs = np.linspace(-20,20,1000)
-    ys = eigenstate(n1,xs) * f(xs) * eigenstate(n2,xs)
 
-    return np.trapz(ys,xs)
+
+    val = 0
+    for seq in seqs:
+        val += val_from_sequence(seq,n1,n2)
+
+    val = val / 2**4
+    
+    return val
 
 def mat_element_fantisymmetric(n1,n2,f):
     if (n1 % 2 == 1) == (n2 % 2 == 1): return 0
-    xs = np.linspace(-20,20,1000)
-    ys = eigenstate(n1,xs) * f(xs) * eigenstate(n2,xs)
 
-    return np.trapz(ys,xs)
+
+    val = 0
+    for seq in seqs:
+        val += val_from_sequence(seq,n1,n2)
+
+    val = val / 2**4
+    
+    return val
 
 def mat_v_bazi(Nmax, lamb):
     Es = np.array([n + 1/2 + lamb * mat_element(n,n,lambda x:x**4) for n in range(Nmax)], dtype=complex)
@@ -76,6 +121,7 @@ def mat_v_bazi2(Nmax, lamb): #Če je H' simetričen
             #print(f"{i}, {j}")
             H[i,j] += lamb * mat_element_fsymmetric(i,j,lambda x:x**4)
             H[j,i] = np.conj(H[i,j])
+
 
     eigvals, eigvects = eigh(H)
 
