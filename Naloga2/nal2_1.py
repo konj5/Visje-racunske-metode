@@ -22,9 +22,12 @@ def V(x,lamb):
 def eigenstate(N, x):
     return 1/(np.pi**(1/4) * np.sqrt(2**N * scipy.special.factorial(N))) * scipy.special.hermite(N)(x) * np.exp(-x**2/2)
 
-def evolve(startstate, ts, lamb):
+def evolve(startstate, ts, lamb, takenN):
     N = 200
     energs, states = basic_herm(N,lamb)
+
+    energs = energs[:takenN]
+    states = states[:takenN,:]
 
 
     psi = np.zeros((len(states[:,0]),len(ts)), dtype=complex)
@@ -32,15 +35,17 @@ def evolve(startstate, ts, lamb):
         for j in range(len(ts)):
             psi[:,j] += states[:,i].dot(startstate) * states[:,i] * np.exp(-1j * energs[i]*ts[j])
 
-    print(psi)
 
     return psi
 
 L = 10
-dx = 0.1
-dt = 0.01
+dx = 0.05
+dt = 0.002
 
-tmax = 10
+#dx = 0.1
+#dt = 0.01
+
+tmax = 30
 nmax = int(tmax/dt)
 
 xs = np.arange(-L,L, dx)
@@ -54,6 +59,10 @@ lambs = np.arange(0,4,1)
 Ns = np.arange(0,4,1)
 
 sols = np.zeros((len(lambs), len(Ns), len(xs), nmax), dtype=np.complex128)
+
+basis = np.zeros((200, len(xs)))
+for i in range(len(basis[:,0])):
+    basis[i,:] = eigenstate(i, xs)
 
 for i in tqdm(range(len(lambs))):
     lamb = lambs[i]
@@ -77,17 +86,23 @@ for i in tqdm(range(len(lambs))):
     for j in tqdm(range(2),leave=False):
         N = Ns[j]
 
-        startstate = np.zeros(200)
+        takenN = 100
+
+        startstate = np.zeros(takenN)
         startstate[N] = 1
 
-        states =  evolve(startstate, np.arange(0,tmax,dt), lamb)
+        states =  evolve(startstate, np.arange(0,tmax,dt), lamb, takenN)
+
+        basisN = basis[:takenN,:]
 
         #convert to space representation:
 
+        #print(basisN.shape)
+        #print(states.shape)
+
+        sols[i,j+2,:,:]  = np.einsum("ji,jk->ik", basisN, states)
+
         
-
-        sols[i,j+2,:,:]  =
-
 
 
 fig, axs = plt.subplots(len(Ns), len(lambs), figsize = (len(Ns)*2, len(lambs)*2))
@@ -117,4 +132,187 @@ for i in tqdm(range(len(lambs))):
 
 
 fig.tight_layout()
+plt.savefig("evolves.png")
+plt.cla()
+
+
+
+duration = 30
+
+fig, axs = plt.subplots(1,2); ax1, ax2 = axs
+
+i = 0; j = 0
+
+lamb = lambs[i]
+N = Ns[j]
+
+
+line1, = ax1.plot(xs, np.abs(sols[i,j,:,0])**2)
+line2, = ax2.plot(xs, np.abs(sols[i,j+2,:,0])**2)
+
+ax1.set_title("Implicitna")
+ax2.set_title("Spektralna")
+
+fig.suptitle(f"$\\lambda = {lamb}$, $N = {N}$")
+
+def animate(k):
+    
+
+    print(f"animating: {k}/{30*duration}")
+    line1.set_ydata(np.abs(sols[i,j,:,k])**2)
+    line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
+
+    ax1.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    ax2.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    
+
+
+ani = FuncAnimation(fig, animate, frames=30*duration, )
+ani.save(f'animacija_{i}_{j}.mp4',  
+          writer = 'ffmpeg', fps = 30) 
+print("done")
+plt.cla()
+
+duration = 30
+
+fig, axs = plt.subplots(1,2); ax1, ax2 = axs
+
+i = 1; j = 0
+
+lamb = lambs[i]
+N = Ns[j]
+
+
+line1, = ax1.plot(xs, np.abs(sols[i,j,:,0])**2)
+line2, = ax2.plot(xs, np.abs(sols[i,j+2,:,0])**2)
+
+ax1.set_title("Implicitna")
+ax2.set_title("Spektralna")
+
+fig.suptitle(f"$\\lambda = {lamb}$, $N = {N}$")
+
+def animate(k):
+    
+
+    print(f"animating: {k}/{30*duration}")
+
+    k = int(k * nmax/(30*duration))
+
+    line1.set_ydata(np.abs(sols[i,j,:,k])**2)
+    line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
+
+    ax1.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    ax2.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    
+
+ani = FuncAnimation(fig, animate, frames=30*duration, )
+ani.save(f'animacija_{i}_{j}.mp4',  
+          writer = 'ffmpeg', fps = 30) 
+print("done")
+plt.cla()
+
+duration = 30
+
+fig, axs = plt.subplots(1,2); ax1, ax2 = axs
+
+i = 1; j = 1
+
+lamb = lambs[i]
+N = Ns[j]
+
+
+line1, = ax1.plot(xs, np.abs(sols[i,j,:,0])**2)
+line2, = ax2.plot(xs, np.abs(sols[i,j+2,:,0])**2)
+
+ax1.set_title("Implicitna")
+ax2.set_title("Spektralna")
+
+fig.suptitle(f"$\\lambda = {lamb}$, $N = {N}$")
+
+def animate(k):
+    
+
+    print(f"animating: {k}/{30*duration}")
+
+    k = int(k * nmax/(30*duration))
+
+    line1.set_ydata(np.abs(sols[i,j,:,k])**2)
+    line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
+
+    ax1.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    ax2.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    
+
+
+ani = FuncAnimation(fig, animate, frames=30*duration, )
+ani.save(f'animacija_{i}_{j}.mp4',  
+          writer = 'ffmpeg', fps = 30) 
+print("done")
+plt.cla()
+
+fig, axs = plt.subplots(1,2); ax1, ax2 = axs
+i = 2; j = 0
+
+lamb = lambs[i]
+N = Ns[j]
+
+
+line1, = ax1.plot(xs, np.abs(sols[i,j,:,0])**2)
+line2, = ax2.plot(xs, np.abs(sols[i,j+2,:,0])**2)
+
+ax1.set_title("Implicitna")
+ax2.set_title("Spektralna")
+
+fig.suptitle(f"$\\lambda = {lamb}$, $N = {N}$")
+
+def animate(k):
+    
+
+    print(f"animating: {k}/{30*duration}")
+    line1.set_ydata(np.abs(sols[i,j,:,k])**2)
+    line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
+
+    ax1.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    ax2.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    
+
+ani = FuncAnimation(fig, animate, frames=30*duration, )
+ani.save(f'animacija_{i}_{j}.mp4',  
+          writer = 'ffmpeg', fps = 30) 
+print("done")
+plt.cla()
+
+duration = 30
+
+fig, axs = plt.subplots(1,2); ax1, ax2 = axs
+
+i = 2; j = 1
+
+lamb = lambs[i]
+N = Ns[j]
+
+
+line1, = ax1.plot(xs, np.abs(sols[i,j,:,0])**2)
+line2, = ax2.plot(xs, np.abs(sols[i,j+2,:,0])**2)
+
+ax1.set_title("Implicitna")
+ax2.set_title("Spektralna")
+
+fig.suptitle(f"$\\lambda = {lamb}$, $N = {N}$")
+
+def animate(k):
+    
+
+    print(f"animating: {k}/{30*duration}")
+    line1.set_ydata(np.abs(sols[i,j,:,k])**2)
+    line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
+
+    ax1.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+    ax2.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
+
+
+ani = FuncAnimation(fig, animate, frames=30*duration, )
+ani.save(f'animacija_{i}_{j}.mp4',  
+          writer = 'ffmpeg', fps = 30) 
+print("done")
 plt.show()
