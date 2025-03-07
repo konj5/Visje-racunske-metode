@@ -42,8 +42,8 @@ L = 10
 dx = 0.05
 dt = 0.002
 
-#dx = 0.1
-#dt = 0.01
+dx = 0.1
+dt = 0.01
 
 tmax = 30
 nmax = int(tmax/dt)
@@ -105,10 +105,10 @@ for i in tqdm(range(len(lambs))):
         
 
 
-fig, axs = plt.subplots(len(Ns), len(lambs), figsize = (len(Ns)*2, len(lambs)*2))
+fig, axs = plt.subplots(len(Ns), len(lambs), figsize = (len(Ns)*2+1, len(lambs)*2))
 
 cmap = plt.get_cmap("hot")
-norm = colors.Normalize(0,1)
+norm = colors.Normalize(0,np.max(np.abs(sols)**2))
 for i in tqdm(range(len(lambs))):
     lamb = lambs[i]
     for j in tqdm(range(2),leave=False):
@@ -131,9 +131,13 @@ for i in tqdm(range(len(lambs))):
 
 
 
-fig.tight_layout()
+cbar_ax = fig.add_axes([0.92, 0.15, 0.025, 0.8])
+fig.colorbar(cm.ScalarMappable(norm,cmap), cax=cbar_ax)
+
+fig.tight_layout(rect=(0,0,0.9,1))
+#fig.subplots_adjust(wspace=1, hspace=1)
 plt.savefig("evolves.png")
-plt.cla()
+plt.show()
 
 
 
@@ -159,6 +163,9 @@ def animate(k):
     
 
     print(f"animating: {k}/{30*duration}")
+
+    k = int(k * nmax/(30*duration))
+
     line1.set_ydata(np.abs(sols[i,j,:,k])**2)
     line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
 
@@ -269,6 +276,9 @@ def animate(k):
     
 
     print(f"animating: {k}/{30*duration}")
+
+    k = int(k * nmax/(30*duration))
+
     line1.set_ydata(np.abs(sols[i,j,:,k])**2)
     line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
 
@@ -304,6 +314,9 @@ def animate(k):
     
 
     print(f"animating: {k}/{30*duration}")
+
+    k = int(k * nmax/(30*duration))
+
     line1.set_ydata(np.abs(sols[i,j,:,k])**2)
     line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
 
