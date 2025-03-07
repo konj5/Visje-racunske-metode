@@ -56,7 +56,7 @@ def mat_element(n1,n2,f):
     for seq in seqs:
         val += val_from_sequence(seq,n1,n2)
 
-    val = val / 2**4
+    val = val / 2**2
 
     return val
 
@@ -68,7 +68,7 @@ def mat_element_fsymmetric(n1,n2,f):
     for seq in seqs:
         val += val_from_sequence(seq,n1,n2)
 
-    val = val / 2**4
+    val = val / 2**2
     
     return val
 
@@ -80,7 +80,7 @@ def mat_element_fantisymmetric(n1,n2,f):
     for seq in seqs:
         val += val_from_sequence(seq,n1,n2)
 
-    val = val / 2**4
+    val = val / 2**2
     
     return val
 
