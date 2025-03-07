@@ -38,14 +38,14 @@ def evolve(startstate, ts, lamb, takenN):
 
     return psi
 
-L = 10
-dx = 0.05
-dt = 0.002
+L = 15
+#dx = 0.05
+#dt = 0.002
 
 dx = 0.1
 dt = 0.01
 
-tmax = 30
+tmax = 10
 nmax = int(tmax/dt)
 
 xs = np.arange(-L,L, dx)
@@ -108,12 +108,16 @@ for i in tqdm(range(len(lambs))):
 fig, axs = plt.subplots(len(Ns), len(lambs), figsize = (len(Ns)*2+1, len(lambs)*2))
 
 cmap = plt.get_cmap("hot")
+<<<<<<< HEAD:Naloga2/nal2_1_old.py
+=======
+#cmap = plt.get_cmap("viridis")
+>>>>>>> 3414e42ebc1d796ccaa4ff0de6ec4ae44c0651e4:Naloga2/nal2_1.py
 norm = colors.Normalize(0,np.max(np.abs(sols)**2))
 for i in tqdm(range(len(lambs))):
     lamb = lambs[i]
     for j in tqdm(range(2),leave=False):
         N = Ns[j]
-        axs[i,j].imshow(np.abs(sols[i,j,:,:].T)**2, cmap=cmap, norm=norm, aspect="auto", extent=(-L,L,tmax,0))
+        axs[i,j].imshow(np.abs(sols[i,j,:,:].T)**2, cmap=cmap, norm=norm, aspect="auto", extent=(-L,L,tmax,0), interpolation='none')
 
         axs[i,j].set_title(f"$N = {N}$, $\\lambda = {lamb}, implicitna$")
 
@@ -122,7 +126,7 @@ for i in tqdm(range(len(lambs))):
     
     for j in tqdm(range(2),leave=False):
         N = Ns[j]
-        axs[i,j+2].imshow(np.abs(sols[i,j+2,:,:].T)**2, cmap=cmap, norm=norm, aspect="auto", extent=(-L,L,tmax,0))
+        axs[i,j+2].imshow(np.abs(sols[i,j+2,:,:].T)**2, cmap=cmap, norm=norm, aspect="auto", extent=(-L,L,tmax,0), interpolation='none')
 
         axs[i,j+2].set_title(f"$N = {N}$, $\\lambda = {lamb}, spekter$")
 
@@ -130,10 +134,16 @@ for i in tqdm(range(len(lambs))):
         axs[i,j+2].set_ylabel("t")
 
 
-
+#fig.subplots_adjust(right=0.8)
 cbar_ax = fig.add_axes([0.92, 0.15, 0.025, 0.8])
 fig.colorbar(cm.ScalarMappable(norm,cmap), cax=cbar_ax)
 
+<<<<<<< HEAD:Naloga2/nal2_1_old.py
+cbar_ax = fig.add_axes([0.92, 0.15, 0.025, 0.8])
+fig.colorbar(cm.ScalarMappable(norm,cmap), cax=cbar_ax)
+
+=======
+>>>>>>> 3414e42ebc1d796ccaa4ff0de6ec4ae44c0651e4:Naloga2/nal2_1.py
 fig.tight_layout(rect=(0,0,0.9,1))
 #fig.subplots_adjust(wspace=1, hspace=1)
 plt.savefig("evolves.png")
@@ -168,6 +178,7 @@ def animate(k):
 
     line1.set_ydata(np.abs(sols[i,j,:,k])**2)
     line2.set_ydata(np.abs(sols[i,j+2,:,k])**2)
+
 
     ax1.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
     ax2.set_ylim(0,max(np.max(np.abs(sols[i,j,:,:])**2), np.max(np.abs(sols[i,j+2,:,:])**2)))
@@ -329,3 +340,100 @@ ani.save(f'animacija_{i}_{j}.mp4',
           writer = 'ffmpeg', fps = 30) 
 print("done")
 plt.show()
+
+
+
+L = 10
+#dx = 0.05
+#dt = 0.002
+
+dx = 0.1
+dt = 0.01
+
+tmax = 30
+nmax = int(tmax/dt)
+
+xs = np.arange(-L,L, dx)
+Vmn = np.zeros((len(xs), nmax))
+
+spacewise2 = [1/2, -1, 1/2]
+spacewise4 = [-1/12, 4/3, -5/3, 4/3, -1/12]
+
+
+lambs = np.arange(0,4,1)
+Ns = np.arange(0,4,1)
+
+sols = np.zeros((len(lambs), len(Ns), len(xs), nmax), dtype=np.complex128)
+
+basis = np.zeros((200, len(xs)))
+for i in range(len(basis[:,0])):
+    basis[i,:] = eigenstate(i, xs)
+
+for i in tqdm(range(len(lambs))):
+    lamb = lambs[i]
+
+    V0 = V(xs,lamb)
+    for k in range(nmax):
+        Vmn[:,k] = V0
+
+    for j in tqdm(range(2),leave=False):
+        N = Ns[j]
+        solution = solver.implicinator(
+            startstate=eigenstate(N,xs),
+            V=Vmn,
+            tau=dt,
+            h=dx,
+            nmax=nmax,
+            spacewise=spacewise4
+        )
+        sols[i,j,:,:] = solution
+
+    for j in tqdm(range(2),leave=False):
+        N = Ns[j]
+
+        takenN = 100
+
+        startstate = np.zeros(takenN)
+        startstate[N] = 1
+
+        states =  evolve(startstate, np.arange(0,tmax,dt), lamb, takenN)
+
+        basisN = basis[:takenN,:]
+
+        #convert to space representation:
+
+        #print(basisN.shape)
+        #print(states.shape)
+
+        sols[i,j+2,:,:]  = np.einsum("ji,jk->ik", basisN, states)
+
+
+impsols = np.trapz(np.abs(sols[:,:2,:,:])**2, axis = 2, dx = dx)
+specsols = np.trapz(np.abs(sols[:,2:,:,:])**2, axis = 2, dx = dx)
+
+ts = np.linspace(0,tmax, len(impsols[0,0,:]))
+
+for i in range(len(lambs)):
+    plt.plot(ts, np.abs(1-impsols[i,0,:]), label = f"$\\lambda = {lambs[i]}$")
+
+plt.xlabel("t")
+plt.ylabel("$|1-\\langle \\psi|\\psi\\rangle|$")
+plt.yscale("log")
+plt.tight_layout()
+plt.legend()
+plt.title("Implicitna metoda")
+plt.show()
+
+print(specsols.shape)
+for i in range(len(lambs)):
+    plt.plot(ts, np.abs(1-specsols[i,0,:]), label = f"$\\lambda = {lambs[i]}$")
+
+plt.xlabel("t")
+plt.ylabel("$|1-\\langle \\psi|\\psi\\rangle|$")
+plt.yscale("log")
+plt.tight_layout()
+plt.legend()
+plt.title("Spektralna metoda")
+plt.show()
+
+
