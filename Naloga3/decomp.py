@@ -10,15 +10,18 @@ import re, sys
 from matplotlib.animation import FuncAnimation
 import time
 from numba import jit
+np.set_printoptions(edgeitems=30, linewidth=100000, 
+    formatter=dict(float=lambda x: "%.3g" % x))
 
 # p = 1, k = 1
-decomp = [
+decomp11 = [
     [1],
     [1]
 ]
 
+
 # p = 2, k = 2
-decomp = [
+decomp22 = [
     [1/2, 1/2],
     [1,0]
 ]
@@ -28,7 +31,7 @@ decomp = [
 r2 = 2**(1/3)
 x1 = 1/(2-r2)
 x0 = -r2*x1
-decomp = [
+decomp44 = [
     [x1/2,(x0+x1)/2 ,(x0+x1)/2 ,x1/2],
     [x1,x0,x1,0]
 ]
@@ -40,7 +43,7 @@ p3 = 1/2
 p4 = np.conj(p2)
 p5 = np.conj(p1)
 
-decomp = [
+decomp33 = [
     [p1,p3,p5],
     [p2,p4,0]
 ]
@@ -52,50 +55,62 @@ p3 = 1/2
 p4 = np.conj(p2)
 p5 = np.conj(p1)
 
-decomp = [
+decomp45 = [
     [p1,p3,p5,p4,p2],
     [p2,p4,p5,p3,p1]
 ]
 
 
-def U(state, dt, lamb):
+def kinetic(state, dt, coef, lamb):
     q1,q2,p1,p2 = state
-    ret = np.zeros([q1,q2,p1,p2])
+    #ret = np.array([q1,q2,p1,p2])
+    ret = np.zeros(4)
     
     ###Kinetic part
-    ret += np.array([p1, p2, 0, 0])*dt
+    ret += np.array([p1, p2, 0, 0])*dt*coef
+
+    return ret
+
+def potential(state, dt, coef, lamb):
+    q1,q2,p1,p2 = state
+    #ret = np.array([q1,q2,p1,p2])
+    ret = np.zeros(4)
 
     ###Potential part
-    ret += -np.array([0, 0, q1, q2])*dt
-    ret += -2*lamb*q1*q2*np.array([0, 0, q2, q1])*dt
+    ret += -np.array([0, 0, q1, q2])*dt*coef
+    ret += -2*lamb*q1*q2*np.array([0, 0, q2, q1])*dt*coef
 
     return ret
 
 
 
-@jit
-def integrate(startstate, dt, tmax, lamb):
+#@jit
+def integrate(startstate, dt, tmax, lamb, decomp):
     ts = np.arange(0,tmax,dt)
 
     states = np.zeros((len(startstate), len(ts)))
     states[:,0] = startstate
 
 
-    print(1/0)
-    #Here i forgot to use any cool step pattern (this is actively wrong)
-
     for i in range(1,len(ts)):
-        states[:,i] += U(states[:,i-1], dt, lamb)
+        states[:,i] = states[:,i-1]
+        for j in range(len(decomp[0])):
+            states[:,i] += kinetic(states[:,i], dt, decomp[0][j], lamb)
+
+            states[:,i] += potential(states[:,i], dt, decomp[1][j], lamb)
 
     return ts, states
+
 
 from scipy.integrate import solve_ivp
 def integrate_rk45(startstate, dt, tmax, lamb):
     ts = np.arange(0,tmax,dt)
-    def f(y,t):
-        return -np.array([y[0] + 2*lamb*y[0]*y[1]*y[0], y[1] + 2*lamb*y[0]*y[1]*y[0]]) 
+    def f(t,y):
+        return -np.array([y[2],y[3],-y[0] - 2*lamb*y[0]*y[1]*y[1], -y[1] - 2*lamb*y[0]*y[1]*y[0]]) 
     
-    sol = solve_ivp(f, (0,tmax), startstate, "RK45", t_eval = ts)
+    startstate[2:] = -np.array(startstate[2:])
+
+    sol = solve_ivp(f, (0,tmax), startstate, "RK45", t_eval = ts, max_step = dt)
 
     return sol.t, sol.y
     
