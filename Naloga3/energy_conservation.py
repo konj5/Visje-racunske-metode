@@ -56,6 +56,110 @@ plt.yscale("log")
 plt.show()"""
 
 
+"""startstate = [0,0.5,1,0]
+
+dts = [1,0.1,0.05,0.01]
+
+
+tmax = 40
+lamb = 0
+
+decomps = [decomp11, decomp22, decomp44, decomp33, decomp45]
+decompnames = ["razcep11", "razcep22", "razcep44", "razcep33", "razcep45"]
+
+fig, axs = plt.subplots(2,2, figsize = (4*2,4*2))
+
+for i in tqdm(range(len(dts))):
+    dt = dts[i]
+    for j in tqdm(range(len(decomps)), leave=False):
+        decomp = decomps[j]
+        dname = decompnames[j]
+        ts, states = integrate(startstate, dt, tmax, lamb, decomp)
+        Hs = H(states, lamb)
+        axs[i%2,i//2].plot(ts, np.abs(Hs-Hs[0]), label = f"{dname}")
+        axs[i%2,i//2].set_xlabel("t")
+        axs[i%2,i//2].set_ylabel("$|E(t)-E(0)|$")
+        axs[i%2,i//2].set_yscale("log")
+        axs[i%2,i//2].set_title(f"$dt = {dt}$")
+        axs[i%2,i//2].legend()
+
+plt.tight_layout()
+plt.show()"""
+
+
+"""startstate = [0,0.5,1,0]
+
+dts = 10**np.linspace(-3,0,100)
+
+
+tmax = 40
+lamb = 0
+
+decomps = [decomp11, decomp22, decomp44, decomp33, decomp45]
+decompnames = ["razcep11", "razcep22", "razcep44", "razcep33", "razcep45"]
+
+
+for i in tqdm(range(len(decomps))):
+    decomp = decomps[i]
+    dname = decompnames[i]
+    dHs = []
+    for j in tqdm(range(len(dts)), leave=False):
+        dt = dts[j]
+        
+        ts, states = integrate(startstate, dt, tmax, lamb, decomp)
+        Hs = H(states, lamb)
+        dHs.append(np.average(np.abs(Hs-Hs[0])[len(Hs)//2:]))
+
+    plt.plot(dts, dHs, label = f"{dname}")        
+
+plt.xlabel("$dt$")
+plt.ylabel("povprečje $|E(t)-E(0)|$")
+plt.yscale("log")
+plt.xscale("log")
+plt.tight_layout()
+plt.legend()
+plt.show()
+"""
+
+
+startstate = [0,0.5,1,0]
+
+dts = 10**np.linspace(-3,0,100)
+
+
+tmax = 40
+lamb = 0
+
+decomps = [decomp11, decomp22, decomp44, decomp33, decomp45]
+decompnames = ["razcep11", "razcep22", "razcep44", "razcep33", "razcep45"]
+
+
+for i in tqdm(range(len(decomps))):
+    decomp = decomps[i]
+    dname = decompnames[i]
+    dHs = []
+    for j in tqdm(range(len(dts)), leave=False):
+        dt = dts[j]
+        
+        stime = time.time()
+        ts, states = integrate(startstate, dt, tmax, lamb, decomp)
+        dHs.append(time.time()-stime)
+
+    plt.plot(dts, dHs, label = f"{dname}")        
+
+plt.xlabel("$dt$")
+plt.ylabel("čas računanja [s]")
+plt.yscale("log")
+plt.xscale("log")
+plt.tight_layout()
+plt.legend()
+plt.show()
+    
+
+
+
+
+
 
 
 

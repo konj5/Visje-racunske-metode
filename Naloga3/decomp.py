@@ -39,7 +39,7 @@ decomp44 = [
 # p = 3, k = 3
 p1 = (1 + 1j/np.sqrt(3))/4
 p2 = 2*p1
-p3 = 1/2
+p3 = 1/2+0j
 p4 = np.conj(p2)
 p5 = np.conj(p1)
 
@@ -51,7 +51,7 @@ decomp33 = [
 # p = 4, k = 5
 p1 = (1 + 1j/np.sqrt(3))/4
 p2 = 2*p1
-p3 = 1/2
+p3 = 1/2+0j
 p4 = np.conj(p2)
 p5 = np.conj(p1)
 
@@ -71,10 +71,31 @@ def kinetic(state, dt, coef, lamb):
 
     return ret
 
+def kineticComplex(state, dt, coef, lamb):
+    q1,q2,p1,p2 = state
+    #ret = np.array([q1,q2,p1,p2])
+    ret = np.zeros(4, dtype=complex)
+    
+    ###Kinetic part
+    ret += np.array([p1, p2, 0, 0])*dt*coef
+
+    return ret
+
 def potential(state, dt, coef, lamb):
     q1,q2,p1,p2 = state
     #ret = np.array([q1,q2,p1,p2])
     ret = np.zeros(4)
+
+    ###Potential part
+    ret += -np.array([0, 0, q1, q2])*dt*coef
+    ret += -2*lamb*q1*q2*np.array([0, 0, q2, q1])*dt*coef
+
+    return ret
+
+def potentialComplex(state, dt, coef, lamb):
+    q1,q2,p1,p2 = state
+    #ret = np.array([q1,q2,p1,p2])
+    ret = np.zeros(4, dtype=complex)
 
     ###Potential part
     ret += -np.array([0, 0, q1, q2])*dt*coef
@@ -88,18 +109,26 @@ def potential(state, dt, coef, lamb):
 def integrate(startstate, dt, tmax, lamb, decomp):
     ts = np.arange(0,tmax,dt)
 
-    states = np.zeros((len(startstate), len(ts)))
+    if np.real(decomp[0][0]) == decomp[0][0]:
+        states = np.zeros((len(startstate), len(ts)), dtype=float)
+    else:
+        states = np.zeros((len(startstate), len(ts)), dtype=complex)
     states[:,0] = startstate
 
 
     for i in range(1,len(ts)):
         states[:,i] = states[:,i-1]
         for j in range(len(decomp[0])):
-            states[:,i] += kinetic(states[:,i], dt, decomp[0][j], lamb)
+            if np.real(decomp[0][0]) == decomp[0][0]:
+                states[:,i] += kinetic(states[:,i], dt, decomp[0][j], lamb)
 
-            states[:,i] += potential(states[:,i], dt, decomp[1][j], lamb)
+                states[:,i] += potential(states[:,i], dt, decomp[1][j], lamb)
+            else:
+                states[:,i] += kineticComplex(states[:,i], dt, decomp[0][j], lamb)
 
-    return ts, states
+                states[:,i] += potentialComplex(states[:,i], dt, decomp[1][j], lamb)
+
+    return ts, np.float64(np.real(states))
 
 
 from scipy.integrate import solve_ivp
