@@ -101,17 +101,56 @@ plt.ylabel("Energija")
 plt.legend()
 plt.yscale("log")
 plt.show()"""
+"""
+lamb = 1
+E = 1
 
+def monte_carlo_integrator(f, fmax, box_halfradius):
+    Nhit = 0
+    N = 0
 
-lamb = 19
+    V0 = (2*box_halfradius)**4
+
+    for i in tqdm(range(10000), desc="integrating", leave=False):
+        point = (2*np.random.random(4)-1) * box_halfradius
+        if f(point) <= fmax:
+            Nhit += 1
+        N += 1
+
+    return V0 * Nhit/N
+
+def f(v):
+    return 1/2 * np.linalg.norm(v) + lamb*v[0]**2*v[1]**2
+
 H = generateHamiltonian(40,lamb)
 energies, vects = np.linalg.eigh(H)
+energies = energies[:100]
+Es = np.linspace(0,energies[-1],100)
 
-energies = energies[:len(energies)//2]
+N1s, N2s = [], []
+for i in tqdm(range(len(Es))):
+    N1 = np.sum(energies < Es[i])
+    N2 = monte_carlo_integrator(f,Es[i],np.sqrt(Es[i]))/(2*np.pi)**2
+    N1s.append(N1)
+    N2s.append(N2)
+
+plt.plot(Es, N1s, label = "iz spektra")
+plt.plot(Es, N2s, label = "semiklasično")
+plt.xlabel("Energija")
+plt.ylabel("Število stanj")
+plt.legend()
+plt.show()"""
+
+
+lamb = 1
+H = generateHamiltonian(50,lamb)
+energies, vects = np.linalg.eigh(H)
+
+energies = energies[:500]
 
 dEs = np.abs(energies[:len(energies)-1] - energies[1:])
 
-plt.hist(dEs)
+plt.hist(dEs, bins=np.linspace(0,np.max(dEs),30))
 plt.show()
 
 
