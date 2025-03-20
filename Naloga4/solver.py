@@ -410,7 +410,7 @@ def correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
             for i in range(len(randstate)):
                 bin_repr = to_binary_state(i, n)
                 
-                tempstate = np.zeros(len(randstate))
+                tempstate = np.zeros(len(randstate), dtype=np.complex128)
                 tempstate[i] = 1
 
                 #apply y2, x1
@@ -418,13 +418,13 @@ def correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
                     new_bin_repr = bin_repr.copy()
                     new_bin_repr[site+1] = 1
                     new_i = to_decimal_state(new_bin_repr)
-                    tempstate = np.zeros(len(randstate))
+                    tempstate = np.zeros(len(randstate), dtype=np.complex128)
                     tempstate[new_i] = 1j
                 else:
                     new_bin_repr = bin_repr.copy()
                     new_bin_repr[site+1] = 0
                     new_i = to_decimal_state(new_bin_repr)
-                    tempstate = np.zeros(len(randstate))
+                    tempstate = np.zeros(len(randstate), dtype=np.complex128)
                     tempstate[new_i] = -1j
                 
                 if bin_repr[site] == 0:

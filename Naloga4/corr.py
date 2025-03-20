@@ -16,10 +16,10 @@ np.set_printoptions(edgeitems=30, linewidth=100000,
 
 import solver
 
-t = 10
+"""t = 10
 dt = 0.01
-dsites = [0]
-n = 4
+dsites = [0,1,5]
+n = 12
 Jx, Jy, Jz = [1,1,1]
 N_psi = 40
 
@@ -31,4 +31,21 @@ for dsite in dsites:
 plt.legend()
 plt.xlabel(t)
 plt.ylabel("$C_{zz}$")
+plt.show()"""
+
+
+t = 10
+dt = 0.01
+ns = [2,4]
+Jx, Jy, Jz = [1,1,1]
+N_psi = 40
+
+for n in ns:
+    corr = solver.correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
+    ts = np.arange(0,t,dt)
+    plt.plot(ts, corr, label = f"$n = {n}$")
+
+plt.legend()
+plt.xlabel(t)
+plt.ylabel("$C_{JJ}$")
 plt.show()
