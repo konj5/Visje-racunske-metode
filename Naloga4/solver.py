@@ -379,7 +379,7 @@ def correlator_zz(site1, site2, N_psi, n, dt, t, Jx, Jy, Jz, decomp):
         randstate = get_typicall_state(n)
 
         #prepare states 1:
-        state1 = np.zeros(len(randstate))
+        state1 = np.zeros(len(randstate), dtype=np.complex128)
         for i in range(len(randstate)):
             bin_repr = to_binary_state(i, n)
             state1[i] = randstate[i] * (-1)**bin_repr[site1]
