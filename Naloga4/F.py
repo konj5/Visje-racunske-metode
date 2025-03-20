@@ -79,10 +79,10 @@ plt.legend()
 plt.show()"""
 
 
-"""b = 10
+b = 10
 db = 0.01
-ns = [2,4,6,8,10]
-Jx, Jy, Jz = [1,1,-1]
+ns = [2,4]
+Jx, Jy, Jz = [1,1,1]
 N_psi = 40
 
 for n in ns[::-1]:
@@ -96,13 +96,13 @@ plt.xscale("log")
 
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, d\\beta = {db}, N_\\psi = {N_psi}$")
 plt.legend()
-plt.show()"""
+plt.show()
 
 
-b = 10
+"""b = 10
 db = 0.01
-ns = [2,4,6,8,10]
-Jx, Jy, Jz = [-1,-1,-1]
+ns = [2,4]
+Jx, Jy, Jz = [1,1,1]
 N_psi = 40
 
 for n in ns[::-1]:
@@ -124,4 +124,4 @@ plt.xscale("log")
 
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, d\\beta = {db}, N_\\psi = {N_psi}$")
 plt.legend()
-plt.show()
+plt.show()"""

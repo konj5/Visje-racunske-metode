@@ -17,11 +17,11 @@ np.set_printoptions(edgeitems=30, linewidth=100000,
 import solver
 
 t = 10
-dt = 0.01
-dsites = [0]
-n = 4
-Jx, Jy, Jz = [1,1,1]
-N_psi = 40
+dt = 0.05
+dsites = [0,1,5]
+n = 12
+Jx, Jy, Jz = [-1,-1,-1]
+N_psi = 20
 
 for dsite in dsites:
     corr = solver.correlator_zz(0,dsite, N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
@@ -29,6 +29,7 @@ for dsite in dsites:
     plt.plot(ts, corr, label = f"$d = {dsite}$")
 
 plt.legend()
-plt.xlabel(t)
+plt.xlabel("t")
 plt.ylabel("$C_{zz}$")
+plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, dt = {dt}, N_\\psi = {N_psi}$, $n = {n}$")
 plt.show()
