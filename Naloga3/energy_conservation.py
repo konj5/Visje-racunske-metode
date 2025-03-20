@@ -159,7 +159,7 @@ plt.legend()
 plt.show()"""
     
 
-startstate = [0,0.5,1,0]
+"""startstate = [0,0.5,1,0]
 
 dts = 10**np.linspace(-3,0,50)
 
@@ -244,9 +244,9 @@ plt.xscale("log")
 plt.tight_layout()
 plt.legend()
 plt.show()
+"""
 
-
-"""startstate = [0,0.5,1,0]
+startstate = [0,0.5,1,0]
 
 lambs = np.linspace(0,10,20)
 
@@ -286,7 +286,7 @@ plt.ylabel("povprečje $|E(t)-E(0)|$")
 plt.yscale("log")
 plt.tight_layout()
 plt.legend()
-plt.show()"""
+plt.show()
 
 
 
