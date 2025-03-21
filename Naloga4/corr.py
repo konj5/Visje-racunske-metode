@@ -14,10 +14,10 @@ from numba import jit
 np.set_printoptions(edgeitems=30, linewidth=100000, 
     formatter=dict(float=lambda x: "%.3g" % x))
 
-import solver
+import solver, solver3
 
 
-t = 10
+"""t = 10
 dt = 0.05
 dsites = [0,1,5]
 n = 12
@@ -52,21 +52,22 @@ plt.legend()
 plt.xlabel("t")
 plt.ylabel("$C_{zz}$")
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, dt = {dt}, N_\\psi = {N_psi}$")
-plt.savefig("1.png")
+plt.savefig("1.png")"""
 
 
 
 plt.cla()
 t = 10
-dt = 0.01
-ns = [2,4,6,8,10,12]
+dt = 0.1
+ns = [16]
 Jx, Jy, Jz = [1,1,1]
-N_psi = 10
+N_psi = 5
 
 ints = []
 
 for n in ns[::]:
-    corr = solver.correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
+    corr = solver3.correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
+    print(corr)
     ts = np.arange(0,t,dt)
     plt.plot(ts, corr, label = f"$n = {n}$")
     ints.append(np.trapz(corr, ts))
@@ -75,11 +76,11 @@ plt.legend()
 plt.xlabel("t")
 plt.ylabel("$C_{JJ}$")
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, dt = {dt}, N_\\psi = {N_psi}$")
-plt.savefig("2.png")
+plt.show()
 
 plt.cla()
 plt.plot(ns, ints)
 plt.xlabel("n")
 plt.ylabel("$C_{JJ}$")
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, dt = {dt}, N_\\psi = {N_psi}$")
-plt.savefig("3.png")
+plt.show()

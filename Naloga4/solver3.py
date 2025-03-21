@@ -255,13 +255,23 @@ def evolve(state, n, dz, z, Jx, Jy, Jz, decomp):
     return state
 
 @jit
-def evolve_zs(state, n, dz, z, Jx, Jy, Jz, decomp):
-    assert n % 2 == 0
-    assert len(state) == 2**n
-
+def build_base(n):
     basis = np.zeros((2**n, n), dtype=np.byte)
     for i in range(2**n):
         basis[i,:] = to_binary_state(i,n)
+
+    print(f"basis constructed!")
+    return basis
+
+"""build_base(2)
+stime = time.time()
+build_base(14)
+print(time.time()-stime)"""
+
+@jit
+def evolve_zs(state, n, dz, z, Jx, Jy, Jz, decomp, basis):
+    assert n % 2 == 0
+    assert len(state) == 2**n
 
     if np.imag(z) == 0:
         ts = np.arange(0,np.abs(z),dz, dtype=numba.complex128)
@@ -295,20 +305,24 @@ def get_typicall_state(n):
 
 
 def Z(N_psi, n, db, b, Jx, Jy, Jz, decomp):
+
+    basis = build_base(n)
+
     summed = 0
     for _ in tqdm(range(N_psi)):
         state = get_typicall_state(n)
-        state = evolve(state, n, 1j*db, -1j*b/2, Jx, Jy, Jz, decomp)
+        state = evolve(state, n, 1j*db, -1j*b/2, Jx, Jy, Jz, decomp, basis)
         summed += np.linalg.norm(state)
 
     return summed/N_psi
 
 
 def Z_zs(N_psi, n, db, b, Jx, Jy, Jz, decomp):
+    basis = build_base(n)
     summed = 0
     for _ in  tqdm(range(N_psi)):
         state = get_typicall_state(n)
-        states = evolve_zs(state, n, 1j*db, -1j*b/2, Jx, Jy, Jz, decomp)
+        states = evolve_zs(state, n, 1j*db, -1j*b/2, Jx, Jy, Jz, decomp, basis)
         summed += np.linalg.norm(states, axis=1)
 
     return summed/N_psi
@@ -324,6 +338,8 @@ def F_zs(N_psi, n, db, b, Jx, Jy, Jz, decomp):
 
 
 def E_zs(N_psi, n, db, b, Jx, Jy, Jz, decomp):
+
+    basis = build_base(n)
 
     H2 = np.array([
         [Jz , 0, 0, Jx-Jy],
@@ -342,7 +358,7 @@ def E_zs(N_psi, n, db, b, Jx, Jy, Jz, decomp):
     summed = 0
     for _ in tqdm(range(N_psi)):
         state = get_typicall_state(n)
-        state = evolve_zs(state, n, 1j*db, -1j*b/2, Jx, Jy, Jz, decomp)
+        state = evolve_zs(state, n, db, b/2, Jx, Jy, Jz, decomp, basis)
 
 
         Xstate = np.zeros(state.shape, dtype=np.complex128)
@@ -385,6 +401,7 @@ def thermal_expected(X, N_psi, n, db, b, Jx, Jy, Jz, decomp):
 
 #korelator spina v z smeri na site1 ob času 0 in site2 ob času t
 def correlator_zz(site1, site2, N_psi, n, dt, t, Jx, Jy, Jz, decomp):
+    basis = build_base(n)
     summed = 0
     for _ in  tqdm(range(N_psi)):
         randstate = get_typicall_state(n)
@@ -392,15 +409,15 @@ def correlator_zz(site1, site2, N_psi, n, dt, t, Jx, Jy, Jz, decomp):
         #prepare states 1:
         state1 = np.zeros(len(randstate), dtype=np.complex128)
         for i in range(len(randstate)):
-            bin_repr = to_binary_state(i, n)
+            bin_repr = basis[i]
             state1[i] = randstate[i] * (-1)**bin_repr[site1]
-        states1 = evolve_zs(state1,n,dt,t,Jx,Jy,Jz,decomp)
+        states1 = evolve_zs(state1,n,dt,t,Jx,Jy,Jz,decomp, basis)
 
         #prepare states 2:
-        states2 = evolve_zs(randstate,n,dt,t,Jx,Jy,Jz,decomp)
+        states2 = evolve_zs(randstate,n,dt,t,Jx,Jy,Jz,decomp, basis)
         for j in range(len(states2[:,0])):
             for i in range(len(randstate)):
-                bin_repr = to_binary_state(i, n)
+                bin_repr = basis[i]
                 states2[j,i] = states2[j,i] * (-1)**bin_repr[site2]
         states2 = states2.conj()
 
@@ -410,7 +427,8 @@ def correlator_zz(site1, site2, N_psi, n, dt, t, Jx, Jy, Jz, decomp):
     return summed/N_psi
 
 #@jit
-def correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
+def correlator_JJ_NOT_WORKING_RIGHT(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
+    basis = build_base(n)
     summed = 0
     #for _ in  tqdm(range(N_psi)):
     for _ in range(N_psi):
@@ -422,7 +440,7 @@ def correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
             #prepare states 1:
             state1 = np.zeros(len(randstate), dtype=np.complex128)
             for i in range(len(randstate)):
-                bin_repr = to_binary_state(i, n)
+                bin_repr = basis[i]
                 
                 tempstate = np.zeros(len(randstate), dtype=np.complex128)
                 tempstate[i] = 1
@@ -494,13 +512,13 @@ def correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
 
                 state1 += 2*(tempstate1-tempstate2)
 
-            states1 = evolve_zs(state1,n,dt,t,Jx,Jy,Jz,decomp)
+            states1 = evolve_zs(state1,n,dt,t,Jx,Jy,Jz,decomp, basis)
 
             #prepare states 2:
-            states2 = evolve_zs(randstate,n,dt,t,Jx,Jy,Jz,decomp)
+            states2 = evolve_zs(randstate,n,dt,t,Jx,Jy,Jz,decomp, basis)
             for j in range(len(states2[:,0])):
                 for i in range(len(randstate)):
-                    bin_repr = to_binary_state(i, n)
+                    bin_repr = basis[i]
                     
                     tempstate = np.zeros(len(randstate), dtype=np.complex128)
                     tempstate[i] = 1
@@ -581,7 +599,74 @@ def correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
 
 
 #def magnetization(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
-    
 
+J2 = [
+    [0,0,0,0],
+    [0,0,-2j,0],
+    [0,2j,0,0],
+    [0,0,0,0]
+]
+    
+@jit
+def J(state, n, basis):
+    endstate = np.zeros(2**n, dtype=np.complex128)
+
+    for j in range(n-1): 
+        for i in range(2**n):
+            binrepr = basis[i] 
+            bits = binrepr[j:j+2]
+            
+            if np.all(bits == np.array([0,1])):
+                endbin = binrepr.copy()
+                endbin[j:j+2] = [1,0]
+                endstate[to_decimal_state(endbin)] += 2j * state[j]
+
+            if np.all(bits ==  np.array([1,0])):
+                endbin = binrepr.copy()
+                endbin[j:j+2] = [0,1]
+                endstate[to_decimal_state(endbin)] += -2j * state[j]
+        
+    for i in range(2**n):
+        binrepr = basis[i] 
+        bits = np.array([binrepr[-1], binrepr[0]])
+        
+        if np.all(bits == np.array([0,1])):
+            endbin = binrepr.copy()
+            endbin[-1], endbin[0] = [1,0]
+            endstate[to_decimal_state(endbin)] += 2j * state[j]
+
+        if np.all(bits ==  np.array([1,0])):
+            endbin = binrepr.copy()
+            endbin[-1], endbin[0] = [0,1]
+            endstate[to_decimal_state(endbin)] += -2j * state[j]
+
+
+    return endstate
+
+
+
+def correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, decomp):
+    basis = build_base(n)
+    summed = 0
+    for i in tqdm(range(N_psi)):
+        randstate = get_typicall_state(n)
+        
+        #Prepare the 1st states
+        state1 = randstate.copy()
+        state1 = J(state1,n,basis)
+        states1 = evolve_zs(state1,n,dt,t,Jx,Jy,Jz,decomp, basis)
+
+        #Prepare the 2nd states
+        states2 = evolve_zs(randstate,n,dt,t,Jx,Jy,Jz,decomp, basis)
+        for j in range(len(states2[:,0])):
+            states2[j,:] = J(states2[j,:], n, basis)
+
+        states2 = states2.conj()
+
+        #calculate corelators
+        summed += np.einsum("ij,ij->i", states1, states2)
+
+    return summed
+        
 
 
