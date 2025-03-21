@@ -15,6 +15,9 @@ np.set_printoptions(edgeitems=30, linewidth=100000,
     formatter=dict(float=lambda x: "%.3g" % x))
 
 
+#IMPLEMENTED BASIS
+
+
 s0 = np.eye(2, dtype=complex)
 sx = np.array([[0,1],[1,0]], dtype=complex)
 sy = np.array([[0,-1j],[1j,0]], dtype=complex)
@@ -128,14 +131,14 @@ def to_decimal_state(binarr):
     return val
 
 @jit
-def applyA(state, n, U2):
+def applyA(state, n, U2, basis):
     N = len(state)
 
     for j in np.arange(0,n,2):
         endstate = np.zeros(len(state), dtype=np.complex128)
         
         for i in range(N):
-            binrepr = to_binary_state(i, n)
+            binrepr = basis[i,:]
             bits = binrepr[j:j+2]
             decibits = to_decimal_state(bits)
 
@@ -156,14 +159,14 @@ def applyA(state, n, U2):
     return state
 
 @jit
-def applyB(state, n, U2):
+def applyB(state, n, U2, basis):
     N = len(state)
 
     for j in np.arange(1,n-1,2):
         endstate = np.zeros(len(state), dtype=np.complex128)
         
         for i in range(N):
-            binrepr = to_binary_state(i, n)
+            binrepr = basis[i,:]
             bits = binrepr[j:j+2]
             decibits = to_decimal_state(bits)
 
@@ -184,7 +187,7 @@ def applyB(state, n, U2):
     endstate = np.zeros(len(state), dtype=np.complex128)
         
     for i in range(N):
-        binrepr = to_binary_state(i, n)
+        binrepr = basis[i,:]
 
         #change here
         bits = np.array([binrepr[-1], binrepr[0]])
@@ -222,13 +225,13 @@ print(applyB(startstate, 4, np.eye(4)))"""
 
 
 @jit
-def evolve_state_once(state, n, dt, Jx, Jy, Jz, decomp):
+def evolve_state_once(state, n, dt, Jx, Jy, Jz, decomp, basis):
     for i in range(len(decomp[0,:])):
         U2 = e_zh01(-1j * dt * decomp[0,i], Jx, Jy, Jz)
-        state = applyA(state, n, U2)
+        state = applyA(state, n, U2, basis)
 
         U2 = e_zh01(-1j * dt * decomp[1,i], Jx, Jy, Jz)
-        state = applyB(state, n, U2)
+        state = applyB(state, n, U2, basis)
 
     return state
 
@@ -242,15 +245,23 @@ def evolve(state, n, dz, z, Jx, Jy, Jz, decomp):
     assert n % 2 == 0
     assert len(state) == 2**n
 
+    basis = np.zeros((2**n, n), dtype=np.byte)
+    for i in range(2**n):
+        basis[i,:] = to_binary_state(i,n)
+
     ts = np.arange(0,z,dz)
     for i in range(len(ts)):
-        state = evolve_state_once(state, n, dz, Jx, Jy, Jz, decomp)
+        state = evolve_state_once(state, n, dz, Jx, Jy, Jz, decomp, basis)
     return state
 
 @jit
 def evolve_zs(state, n, dz, z, Jx, Jy, Jz, decomp):
     assert n % 2 == 0
     assert len(state) == 2**n
+
+    basis = np.zeros((2**n, n), dtype=np.byte)
+    for i in range(2**n):
+        basis[i,:] = to_binary_state(i,n)
 
     if np.imag(z) == 0:
         ts = np.arange(0,np.abs(z),dz, dtype=numba.complex128)
@@ -262,7 +273,7 @@ def evolve_zs(state, n, dz, z, Jx, Jy, Jz, decomp):
 
     #print("\n")
     for i in range(1,len(ts)):
-        states[i,:] = evolve_state_once(states[i-1,:], n, dz, Jx, Jy, Jz, decomp)
+        states[i,:] = evolve_state_once(states[i-1,:], n, dz, Jx, Jy, Jz, decomp, basis)
         #print(f"{i}/{len(ts)}")
     return states
 

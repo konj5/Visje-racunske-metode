@@ -14,7 +14,7 @@ from numba import jit
 np.set_printoptions(edgeitems=30, linewidth=100000, 
     formatter=dict(float=lambda x: "%.3g" % x))
 
-import solver
+import solver, solver3
 
 
 """b = 10
@@ -81,12 +81,12 @@ plt.show()"""
 
 b = 10
 db = 0.01
-ns = [2,4]
+ns = [2,4,8]
 Jx, Jy, Jz = [1,1,1]
 N_psi = 40
 
 for n in ns[::-1]:
-    Fs = solver.F_zs(N_psi, n, db, b, Jx, Jy, Jz, solver.decomp22)
+    Fs = solver3.F_zs(N_psi, n, db, b, Jx, Jy, Jz, solver.decomp22)
     bs = np.linspace(0, b, len(Fs))
     plt.plot(bs, Fs, label = f"$n={n}$")
 

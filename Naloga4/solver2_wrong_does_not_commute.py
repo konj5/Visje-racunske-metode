@@ -14,6 +14,8 @@ from numba import jit
 np.set_printoptions(edgeitems=30, linewidth=100000, 
     formatter=dict(float=lambda x: "%.3g" % x))
 
+#TRIED SWAPPING ORDER
+
 
 s0 = np.eye(2, dtype=complex)
 sx = np.array([[0,1],[1,0]], dtype=complex)
@@ -131,78 +133,67 @@ def to_decimal_state(binarr):
 def applyA(state, n, U2):
     N = len(state)
 
-    for j in np.arange(0,n,2):
-        endstate = np.zeros(len(state), dtype=np.complex128)
-        
-        for i in range(N):
-            binrepr = to_binary_state(i, n)
+    endstate = np.copy(state)
+    for i in range(N):
+        if endstate[i] == 0: 
+            continue
+
+        binrepr = to_binary_state(i, n)
+        for j in np.arange(0,n,2):
             bits = binrepr[j:j+2]
             decibits = to_decimal_state(bits)
 
-            for endstate_local in [[0,0], [0,1], [1,0],[1,1]]:
-                end_binrepr =  binrepr.copy()
+            for k, endstate_local in enumerate([[0,0], [0,1], [1,0],[1,1]]):
+                end_binrepr = binrepr.copy()
                 end_binrepr[j:j+2] = np.array(endstate_local)
-
-                end_deci_local = to_decimal_state(np.array(endstate_local))
                 end_deci = to_decimal_state(end_binrepr)
 
-                if state[i] != 0:
-                    endstate[end_deci] += U2[end_deci_local,decibits] * state[i]
-
-        state = endstate.copy()
-
-        #(endstate)
-
-    return state
+                endstate[end_deci] += U2[k,decibits] * endstate[i]
+    
+    print(np.linalg.norm(endstate))
+    return endstate
 
 @jit
 def applyB(state, n, U2):
     N = len(state)
 
-    for j in np.arange(1,n-1,2):
-        endstate = np.zeros(len(state), dtype=np.complex128)
-        
-        for i in range(N):
-            binrepr = to_binary_state(i, n)
+    endstate = np.copy(state)
+    for i in range(N):
+        if endstate[i] == 0: 
+            continue
+
+        binrepr = to_binary_state(i, n)
+        for j in np.arange(1,n-1,2):
             bits = binrepr[j:j+2]
             decibits = to_decimal_state(bits)
 
-            for endstate_local in [[0,0], [0,1], [1,0],[1,1]]:
-                end_binrepr =  binrepr.copy()
+            for k, endstate_local in enumerate([[0,0], [0,1], [1,0],[1,1]]):
+                end_binrepr = binrepr.copy()
                 end_binrepr[j:j+2] = np.array(endstate_local)
-
-                end_deci_local = to_decimal_state(np.array(endstate_local))
                 end_deci = to_decimal_state(end_binrepr)
 
-                if state[i] != 0:
-                    endstate[end_deci] += U2[end_deci_local,decibits] * state[i]
-
-        state = endstate.copy()
+                endstate[end_deci] += U2[k,decibits] * endstate[i]
 
     #special case at periodic boundary
 
     endstate = np.zeros(len(state), dtype=np.complex128)
         
+    endstate = np.copy(state)
     for i in range(N):
+        if endstate[i] == 0: 
+            continue
+
         binrepr = to_binary_state(i, n)
 
-        #change here
-        bits = np.array([binrepr[-1], binrepr[0]])
-
+        bits = np.array([binrepr[-1],binrepr[0]])
         decibits = to_decimal_state(bits)
 
-        for endstate_local in [[0,0], [0,1], [1,0],[1,1]]:
-            end_binrepr =  binrepr.copy()
-
-            #change here
-            end_binrepr[-1] = np.array(endstate_local)[0]
-            end_binrepr[0] = np.array(endstate_local)[1]
-
-            end_deci_local = to_decimal_state(np.array(endstate_local))
+        for k, endstate_local in enumerate([[0,0], [0,1], [1,0],[1,1]]):
+            end_binrepr = binrepr.copy()
+            end_binrepr[-1], end_binrepr[0] = np.array(endstate_local)
             end_deci = to_decimal_state(end_binrepr)
 
-            if state[i] != 0:
-                endstate[end_deci] += U2[end_deci_local,decibits] * state[i]
+            endstate[end_deci] += U2[k,decibits] * endstate[i]
 
     state = endstate.copy()
 
