@@ -57,16 +57,20 @@ plt.cla()
 """
 
 
-t = 100
+t = 10
 dt = 0.1
+
+T = 1
+
 ns = [2,4,6,8,10,12]
 Jx, Jy, Jz = [1,1,1]
 N_psi = 5
 
+
 ints = []
 
 for n in ns[::]:
-    corr = solver3.correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
+    corr = solver3.correlator_JJT(T, N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
     ts = np.arange(0,t,dt)
     plt.plot(ts, corr, label = f"$n = {n}$")
     ints.append(np.trapz(corr, ts)/n)
@@ -75,7 +79,7 @@ plt.legend()
 plt.xlabel("t")
 plt.ylabel("$C_{JJ}$")
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, dt = {dt}, N_\\psi = {N_psi}$")
-plt.savefig("LOordinary1.png")
+plt.savefig("LOordinary1TT.png")
 plt.cla()
 
 plt.plot(ns, ints)
@@ -83,7 +87,7 @@ plt.xlabel("n")
 plt.ylabel("$C_{JJ}$")
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, dt = {dt}, N_\\psi = {N_psi}$")
 
-plt.savefig("LOordinary2.png")
+plt.savefig("LOordinary2TT.png")
 plt.show()
 
 
@@ -96,7 +100,7 @@ N_psi = 5
 ints = []
 
 for n in ns[::]:
-    corr = solver3.correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
+    corr = solver3.correlator_JJT(T, N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
     ts = np.arange(0,t,dt)
     plt.plot(ts, corr, label = f"$n = {n}$")
     ints.append(np.trapz(corr, ts)/n)
@@ -125,7 +129,7 @@ N_psi = 5
 ints = []
 
 for n in ns[::]:
-    corr = solver3.correlator_JJ(N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
+    corr = solver3.correlator_JJT(T, N_psi, n, dt, t, Jx, Jy, Jz, solver.decomp22)
     ts = np.arange(0,t,dt)
     plt.plot(ts, corr, label = f"$n = {n}$")
     ints.append(np.trapz(corr, ts)/n)

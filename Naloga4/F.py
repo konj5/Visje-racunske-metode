@@ -14,7 +14,7 @@ from numba import jit
 np.set_printoptions(edgeitems=30, linewidth=100000, 
     formatter=dict(float=lambda x: "%.3g" % x))
 
-import solver, solver3, solver4
+import solver, solver3
 
 
 """b = 10
@@ -98,7 +98,7 @@ plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, d\\beta = {db}, N_\\psi = {N_psi}$")
 plt.legend()
 plt.show()"""
 
-
+"""
 b = 10
 db = 0.01
 ns = [2,4]
@@ -106,12 +106,12 @@ Jx, Jy, Jz = [1,1,1]
 N_psi = 40
 
 for n in ns[::-1]:
-    """Bs = solver.Z_zs(N_psi, n, db, b, Jx, Jy, Jz, solver.decomp22)
+    Bs = solver.Z_zs(N_psi, n, db, b, Jx, Jy, Jz, solver.decomp22)
     bs = np.linspace(0, b, len(Bs))
     Gs = np.log(Bs)
     Hs = 1/(bs[1]-Bs[0]) * (Gs[1:]-Gs[:len(Gs)-1])
     bs = (bs[1:] + bs[:len(bs)-1])/2
-    plt.plot(bs, Hs, label = f"$n={n}$")"""
+    plt.plot(bs, Hs, label = f"$n={n}$")
 
     Fs = solver3.E_zs(N_psi, n, db, b, Jx, Jy, Jz, solver.decomp22)
     bs = np.linspace(0, b, len(Fs))
@@ -123,4 +123,4 @@ plt.xscale("log")
 
 plt.title(f"$J_x={Jx}, J_y={Jy}, J_z={Jz}, d\\beta = {db}, N_\\psi = {N_psi}$")
 plt.legend()
-plt.show()
+plt.show()"""
