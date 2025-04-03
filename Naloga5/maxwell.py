@@ -18,8 +18,10 @@ from scipy.integrate import solve_ivp
 
 #v = q1, p1, q2, p2, ..., qN, pN, KL, KR
 
+
 def run(N,M, lamb, tau, TL, TR, tmax):
 
+    @jit(nopython=True)
     def f(t,v):
         vdot = np.zeros(v.shape)
         for i in range(N):
@@ -27,7 +29,7 @@ def run(N,M, lamb, tau, TL, TR, tmax):
             vdot[2*i] += v[2*i+1]
 
             #Conjugate momentum
-            vdot[2*i+1] += -v[2*i] - 4*lamb*v[2*i]**3  - 2*v[2*i]
+            vdot[2*i+1] += -v[2*i] - 4*lamb*v[2*i]**3
             if i != 0:
                 vdot[2*i+1] += v[2*(i-1)] - v[2*i]
             if i != N-1:
@@ -41,26 +43,34 @@ def run(N,M, lamb, tau, TL, TR, tmax):
 
     states = np.zeros((len(startstate), 1))
     states[:,-1] = startstate
-    ts = []
+    ts = np.array([0])
+
+    #@njit(nopython=True)
+    def maxwelleval(taus, tau, TL, TR, startstate, ts, M, states):
+        for i in range(len(taus)):
+            sol = solve_ivp(f,(i*tau,(i+1)*tau), states[:,-1], "DOP853", max_step = 0.1)
+            ts = np.append(ts, sol.t[1:])
+            states = np.append(states, sol.y[:,1:], axis=1)
+
+            #print(ts.shape)
+            #print(states.shape)
+
+            for j in range(M):
+                states[2*j+1,-1] = np.random.normal(0,TL)
+                states[len(startstate)-2*j-1,-1] = np.random.normal(0,TR)
+        
+        return ts, states
 
 
-    for i in range(len(taus)):
-        sol = solve_ivp(f,(i*tau,(i+1)*tau), states[:,-1], "DOP853")
-        ts.extend(sol.t)
-        states = np.append(states, sol.y[:,1:], axis=1)
-
-        for j in range(M):
-            states[2*j+1,-1] = np.random.normal(0,TL)
-            states[len(startstate)-2*j-1,-1] = np.random.normal(0,TR)
+    ts, states = maxwelleval(taus, tau, TL, TR, startstate, ts, M, states)
+    print(ts.shape)
+    print(states.shape)
             
-
-
-
-    return sol.t, sol.y
+    return ts, states
 
 """t,y = run(10,1,0,1,1,1,1)
 print(y.shape)
 print(t)
-print(y)
-"""
+print(y)"""
+
 
