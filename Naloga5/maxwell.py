@@ -56,15 +56,15 @@ def run(N,M, lamb, tau, TL, TR, tmax):
             #print(states.shape)
 
             for j in range(M):
-                states[2*j+1,-1] = np.random.normal(0,TL)
-                states[len(startstate)-2*j-1,-1] = np.random.normal(0,TR)
+                states[2*j+1,-1] = np.random.normal(0,np.sqrt(TL))
+                states[len(startstate)-2*j-1,-1] = np.random.normal(0,np.sqrt(TR))
         
         return ts, states
 
 
     ts, states = maxwelleval(taus, tau, TL, TR, startstate, ts, M, states)
-    print(ts.shape)
-    print(states.shape)
+    #print(ts.shape)
+    #print(states.shape)
             
     return ts, states
 

@@ -221,7 +221,7 @@ from tqdm import trange
 
 tmax = 2000
 
-lambs = np.round(np.linspace(0, 1, 6), decimals=3)
+lambs = np.round(np.linspace(0, 1, 4), decimals=3)
 Ns = np.arange(5,50,(50-5)//10)
 
 import seaborn as sns
@@ -251,22 +251,37 @@ for j in trange(0, len(lambs)):
         #plt.plot([i for i in range(len(J))], J, linestyle = "dashed", marker='o', label = "$\\tau = $" + f"${tau}$")
         vals.append(np.average(J)*N)
 
-    #from scipy.optimize import curve_fit
-    #
-    #def f(x,k):
-    #    return k * (TR-TL)/x
-    #
-    #popt, pcov = curve_fit(f, Ns, vals, p0 = 1)
-    #kopt = popt[0]
-    #NNs = np.linspace(Ns[0], Ns[-1], 100)
-    #
-    #plt.plot(NNs, f(NNs,kopt), linestyle = "dashed", c = pallete[j])
+    plt.plot(Ns, vals, label = "$Max. \\lambda = $" + f"${lamb}$", c = pallete[j], linestyle = "dashed", marker='*')
 
 
-    plt.plot(Ns, vals, label = "$\\lambda = $" + f"${lamb}$", c = pallete[j], linestyle = "dashed", marker='o')
+    vals = []
+    for i in trange(0, len(Ns), leave=False):
+        N = Ns[i]
 
 
-plt.legend(loc="upper right")
+        ts, ys = deterministic.run(N,M,lamb,tau,TL,TR,tmax)
+
+        q = ys[0:-2:2, :]
+        p = ys[1:-2:2, :]
+        J = np.zeros_like(q)
+        for i in range(len(J)):
+            try:
+                J[i,:] = -0.5 * (q[i+1,:]-q[i-1,:]) * p[i,:]
+            except IndexError:
+                pass
+
+        J = J[M:-M]
+
+        J = np.trapezoid(J[:,len(ts)//10:],ts[len(ts)//10:])/tmax
+
+        #plt.plot([i for i in range(len(J))], J, linestyle = "dashed", marker='o', label = "$\\tau = $" + f"${tau}$")
+        vals.append(np.average(J)*N)
+
+
+    plt.plot(Ns, vals, label = "$Det. \\lambda = $" + f"${lamb}$", c = pallete[j], linestyle = "dotted", marker='o')
+
+
+plt.legend(loc="upper left")
 plt.xlabel("$N$")
 plt.ylabel("$\\langle J \\rangle \\cdot \\frac{N}{\\Delta T}$")
 
