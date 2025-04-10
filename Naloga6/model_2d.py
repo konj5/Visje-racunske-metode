@@ -16,15 +16,17 @@ np.set_printoptions(edgeitems=30, linewidth=100000,
 
 
 
-def ising(N, iters, J, h, T):
-    maxiters = 100
+def ising(N, iters, J, h, T, startstate = None):
+    maxiters = 1000
     states = np.zeros((N,N,iters), dtype=np.byte)
     energies = np.zeros(iters, dtype=np.float32)
-    startstate = np.zeros((N,N), dtype=np.byte)
 
-    for i in range(N):
-        for j in range(N):
-           startstate[i,j] = np.random.randint(0,2)
+    if startstate is None:
+        startstate = np.zeros((N,N), dtype=np.byte)
+
+        for i in range(N):
+            for j in range(N):
+                startstate[i,j] = np.random.randint(0,2)
 
     def E_pair(s1,s2):
         return -J * (1 if s1 == 1 else -1) * (1 if s2 == 1 else -1)
@@ -48,7 +50,7 @@ def ising(N, iters, J, h, T):
                 pass
 
             try:
-                E0 += E_pair(startstate[i,j], startstate[i,-1])
+                E0 += E_pair(startstate[i,j], startstate[i,j-1])
             except IndexError:
                 pass
 
@@ -56,7 +58,7 @@ def ising(N, iters, J, h, T):
     
     state = startstate
     leave_condition = False
-    for k in trange(0,iters):
+    for k in trange(0,iters, leave=False):
         if leave_condition:
             break
 
@@ -66,7 +68,7 @@ def ising(N, iters, J, h, T):
         while(True):
             failsafe += 1
             if failsafe > maxiters: 
-                lave_condition = True
+                leave_condition = True
                 break
             i,j = np.random.randint(0,N), np.random.randint(0,N)
 
@@ -88,7 +90,7 @@ def ising(N, iters, J, h, T):
                 pass
 
             try:
-                E00 += E_pair(state[i,j], state[i,-1])
+                E00 += E_pair(state[i,j], state[i,j-1])
             except IndexError:
                 pass
 
@@ -112,14 +114,14 @@ def ising(N, iters, J, h, T):
                 pass
 
             try:
-                Enew += E_pair(new_state[i,j], new_state[i,-1])
+                Enew += E_pair(new_state[i,j], new_state[i,j-1])
             except IndexError:
                 pass
 
             DeltaE = Enew-E00
             ######################
 
-            if DeltaE < 0 or np.random.random() < np.exp(-DeltaE/T):
+            if  DeltaE < 0 or np.random.random() < np.exp(-DeltaE/T):
                 state = new_state
                 E0 += DeltaE
                 break
@@ -128,7 +130,7 @@ def ising(N, iters, J, h, T):
 
 
 def Ising_M(states):
-    return np.average(2*states-1, axis=2)
+    return np.average(2*states-1, axis=[0,1])
 
 def Ising_sus(mags, beta):
     mags = mags[len(mags)//2:]
@@ -178,7 +180,7 @@ def potts(N, iters, J, T, q):
                 pass
 
             try:
-                E0 += E_pair(startstate[i,j], startstate[i,-1])
+                E0 += E_pair(startstate[i,j], startstate[i,j-1])
             except IndexError:
                 pass
 
@@ -215,7 +217,7 @@ def potts(N, iters, J, T, q):
                 pass
 
             try:
-                E00 += E_pair(state[i,j], state[i,-1])
+                E00 += E_pair(state[i,j], state[i,j-1])
             except IndexError:
                 pass
 
@@ -239,7 +241,7 @@ def potts(N, iters, J, T, q):
                 pass
 
             try:
-                Enew += E_pair(new_state[i,j], new_state[i,-1])
+                Enew += E_pair(new_state[i,j], new_state[i,j-1])
             except IndexError:
                 pass
 
