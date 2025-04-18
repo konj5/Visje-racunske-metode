@@ -17,7 +17,7 @@ np.set_printoptions(edgeitems=30, linewidth=100000,
 
 
 def ising(N, iters, J, h, T, startstate = None):
-    maxiters = 1000
+    maxiters = 5000
     states = np.zeros((N,N,iters), dtype=np.byte)
     energies = np.zeros(iters, dtype=np.float32)
 
@@ -35,22 +35,22 @@ def ising(N, iters, J, h, T, startstate = None):
     for i in range(N):
         for j in range(N):
             try:
-                E0 += E_pair(startstate[i,j], startstate[i+1,j])
+                E0 += E_pair(startstate[i,j], startstate[(i+1)%N,j])
             except IndexError:
                 pass
 
             try:
-                E0 += E_pair(startstate[i,j], startstate[i-1,j])
+                E0 += E_pair(startstate[i,j], startstate[(i-1)%N,j])
             except IndexError:
                 pass
 
             try:
-                E0 += E_pair(startstate[i,j], startstate[i,j+1])
+                E0 += E_pair(startstate[i,j], startstate[i,(j+1)%N])
             except IndexError:
                 pass
 
             try:
-                E0 += E_pair(startstate[i,j], startstate[i,j-1])
+                E0 += E_pair(startstate[i,j], startstate[i,(j-1)%N])
             except IndexError:
                 pass
 
@@ -75,22 +75,22 @@ def ising(N, iters, J, h, T, startstate = None):
             #################
             E00 = 0
             try:
-                E00 += E_pair(state[i,j], state[i+1,j])
+                E00 += E_pair(state[i,j], state[(i+1)%N,j])
             except IndexError:
                 pass
 
             try:
-                E00 += E_pair(state[i,j], state[i-1,j])
+                E00 += E_pair(state[i,j], state[(i-1)%N,j])
             except IndexError:
                 pass
 
             try:
-                E00 += E_pair(state[i,j], state[i,j+1])
+                E00 += E_pair(state[i,j], state[i,(j+1)%N])
             except IndexError:
                 pass
 
             try:
-                E00 += E_pair(state[i,j], state[i,j-1])
+                E00 += E_pair(state[i,j], state[i,(j-1)%N])
             except IndexError:
                 pass
 
@@ -99,22 +99,22 @@ def ising(N, iters, J, h, T, startstate = None):
 
             Enew = 0
             try:
-                Enew += E_pair(new_state[i,j], new_state[i+1,j])
+                Enew += E_pair(new_state[i,j], new_state[(i+1)%N,j])
             except IndexError:
                 pass
 
             try:
-                Enew += E_pair(new_state[i,j], new_state[i-1,j])
+                Enew += E_pair(new_state[i,j], new_state[(i-1)%N,j])
             except IndexError:
                 pass
 
             try:
-                Enew += E_pair(new_state[i,j], new_state[i,j+1])
+                Enew += E_pair(new_state[i,j], new_state[i,(j+1)%N])
             except IndexError:
                 pass
 
             try:
-                Enew += E_pair(new_state[i,j], new_state[i,j-1])
+                Enew += E_pair(new_state[i,j], new_state[i,(j-1)%N])
             except IndexError:
                 pass
 
@@ -129,28 +129,47 @@ def ising(N, iters, J, h, T, startstate = None):
     return states, energies
 
 
-def Ising_M(states):
-    return np.average(2*states-1, axis=[0,1])
+def Ising_M(state):
+    return np.average(2*state-1)
 
-def Ising_sus(mags, beta):
-    mags = mags[len(mags)//2:]
-    return beta * np.var(mags)
+#@njit(nopython = True)
+def Ising_sus(state, beta):
+    M2 = 0
+    M1 = 0
+    state = 2*state-1
+    
+    M2 += np.sum(state*state)/np.size(state)
+    M1 += np.sum(state)/np.size(state)
 
-def Ising_heat(energs, beta):
-    energs = energs[len(energs)//2:]
-    return beta**2 * np.var(energs)
+
+    return beta * (M2-M1**2)
+
+#@njit(nopython = True)
+def Ising_heat(state, beta, J):
+    E2 = 0
+    E1 = 0
+    state = 2*state-1
+    N = len(state[0,:])
+    for i in range(N):
+        for j in range(N):
+            E1 += np.float64(-J*(state[i][(j+1)%N]+state[i][(j-1)%N]+state[(i+1)%N][j]+state[(i-1)%N][j])*state[i][j])/np.size(state)
+            E2 +=np.float64((-J*(state[i][(j+1)%N]+state[i][(j-1)%N]+state[(i+1)%N][j]+state[(i-1)%N][j])*state[i][j])**2)/np.size(state)
+
+    return beta**2 * (E2-E1**2)
     
 
 
-def potts(N, iters, J, T, q):
+def potts(N, iters, J, T, q, startstate = None):
     maxiters = 100
     states = np.zeros((N,N,iters), dtype=np.byte)
     energies = np.zeros(iters, dtype=np.float32)
-    startstate = np.zeros((N,N), dtype=np.byte)
 
-    for i in range(N):
-        for j in range(N):
-           startstate[i,j] = np.random.randint(1,q+1)
+    if startstate is None:
+        startstate = np.zeros((N,N), dtype=np.byte)
+
+        for i in range(N):
+            for j in range(N):
+                startstate[i,j] = np.random.randint(1,q+1)
 
     def E_pair(s1,s2):
         return -J * (1 if s1 == s2 else 0)
@@ -186,7 +205,7 @@ def potts(N, iters, J, T, q):
 
     state = startstate
     leave_condition = False
-    for k in trange(0,iters):
+    for k in trange(0,iters, leave=False):
         if leave_condition:
             break
         states[:,:,k] = state
@@ -255,15 +274,29 @@ def potts(N, iters, J, T, q):
 
     return states, energies
 
-def Potts_M(states, q):
-    return np.sum(np.exp(2*np.pi*1j*(states-1)/q), axis=2)
+def Potts_M(state, q):
+    return np.sum(np.exp(2*np.pi*1j*(state-1)/q))/np.size(state)
 
-def Potts_sus(mags, beta):
-    mags = mags[len(mags)//2:]
-    return beta * np.var(mags)
+def Potts_sus(state, beta, q):
+    M2 = 0
+    M1 = 0
+    
+    M2 += np.sum(np.exp(2*np.pi*1j*(state-1)/q) * np.exp(-2*np.pi*1j*(state-1)/q))/np.size(state)
+    M1 += np.sum(np.exp(2*np.pi*1j*(state-1)/q))/np.size(state)
 
-def Potts_heat(energs, beta):
-    energs = energs[len(energs)//2:]
-    return beta**2 * np.var(energs)
+    return beta * (M2-M1**2)
+
+def Potts_heat(state, beta, J):
+    E2 = 0
+    E1 = 0
+
+    N = len(state[0,:])
+    for i in range(N):
+        for j in range(N):
+            DE = np.float64(-J*(float(state[i,(j+1)%N] == state[i,j]) + float(state[i,(j-1)%N] == state[i,j]) + float(state[(i+1)%N,j] == state[i,j])+ float(state[(i-1)%N,j] == state[i,j])))
+            E1 += DE/np.size(state)
+            E2 += DE**2/np.size(state)
+
+    return beta**2 * (E2-E1**2)
 
     
