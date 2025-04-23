@@ -20,7 +20,7 @@ lambs = [0.05,0.1,0.5,1,2]
 data = np.zeros((len(Ns), len(lambs)))
 
 
-"""for j in tqdm(range(len(lambs))):
+for j in tqdm(range(len(lambs))):
     lamb = lambs[j]
     exact_e, exact_v = lanczos(np.array([int(i == 0) for i in range(300)]), 300, lamb)
     #exact_e, exact_v = basic_herm(200, lamb)
@@ -50,9 +50,9 @@ plt.legend()
 plt.xlabel("N")
 plt.ylabel("Delež točnih stanj ($\\varepsilon < 0.001$)")
 plt.show()
-"""
+
     
-Ns = np.int32(np.linspace(15,200,20))
+"""Ns = np.int32(np.linspace(15,200,20))
 lamb = 1
 
 data = np.zeros((Ns[0], len(Ns)))
@@ -70,7 +70,7 @@ for i in range(Ns[0]):
     plt.plot(Ns, data[i,:], label = f"E{i}", color = plt.get_cmap("viridis")(colors.Normalize(0,Ns[0])(i)))
 
 plt.legend()
-plt.show()
+plt.show()"""
 
 
 

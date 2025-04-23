@@ -85,7 +85,7 @@ def BETA(betas,iters,ratio,part,limit,lamb):
         S[i]=f
         T[i],V[i]=d,e
         print(i)
-        print(f,rg,hz)
+        print(f)
     return betas,S,T,V
 
 betas, S, T, V = BETA(betas = np.linspace(0.1,1000,20), iters = 1000, ratio = 100, part = 10, limit = -1, lamb = 0)

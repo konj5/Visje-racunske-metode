@@ -108,10 +108,7 @@ for i in tqdm(range(len(lambs))):
 fig, axs = plt.subplots(len(Ns), len(lambs), figsize = (len(Ns)*2+1, len(lambs)*2))
 
 cmap = plt.get_cmap("hot")
-<<<<<<< HEAD:Naloga2/nal2_1_old.py
-=======
 #cmap = plt.get_cmap("viridis")
->>>>>>> 3414e42ebc1d796ccaa4ff0de6ec4ae44c0651e4:Naloga2/nal2_1.py
 norm = colors.Normalize(0,np.max(np.abs(sols)**2))
 for i in tqdm(range(len(lambs))):
     lamb = lambs[i]
@@ -138,12 +135,6 @@ for i in tqdm(range(len(lambs))):
 cbar_ax = fig.add_axes([0.92, 0.15, 0.025, 0.8])
 fig.colorbar(cm.ScalarMappable(norm,cmap), cax=cbar_ax)
 
-<<<<<<< HEAD:Naloga2/nal2_1_old.py
-cbar_ax = fig.add_axes([0.92, 0.15, 0.025, 0.8])
-fig.colorbar(cm.ScalarMappable(norm,cmap), cax=cbar_ax)
-
-=======
->>>>>>> 3414e42ebc1d796ccaa4ff0de6ec4ae44c0651e4:Naloga2/nal2_1.py
 fig.tight_layout(rect=(0,0,0.9,1))
 #fig.subplots_adjust(wspace=1, hspace=1)
 plt.savefig("evolves.png")
