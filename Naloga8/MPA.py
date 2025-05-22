@@ -15,6 +15,15 @@ np.set_printoptions(edgeitems=30, linewidth=100000,
     formatter=dict(float=lambda x: "%.3g" % x))
 
 
+###############################
+
+
+
+THIS IS BROKEN DOES NOT WORK LOOK AT NALOGA9!!!!
+
+
+#############################
+
 s0 = np.eye(2, dtype=np.complex128)
 sx = np.array([[0,1],[1,0]], dtype=np.complex128)
 sy = np.array([[0,-1j],[1j,0]], dtype=np.complex128)
