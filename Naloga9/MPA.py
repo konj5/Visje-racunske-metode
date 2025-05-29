@@ -68,7 +68,36 @@ def to_decimal_state(binarr):
         val += binarr[-(i+1)] * 2**i
     return val
 
-from numpy.linalg import svd
+from numpy.linalg import svd as npsvd
+
+def svd(A, Mlim):
+    #return npsvd(A)
+
+    U, lamb, Vt = npsvd(A, full_matrices=False)
+
+    if Mlim == 0:
+        if 0 in lamb:
+            k = np.where(lamb == 0)[0][0]
+            lamb = lamb[0:k]
+            U = U[:,0:k]
+            Vt = Vt[0:k,:]
+        else:
+            pass
+    else:
+        if 0 in lamb:
+            k = min(Mlim, np.where(lamb == 0)[0][0])
+            lamb = lamb[0:k]
+            U = U[:,0:k]
+            Vt = Vt[0:k,:]
+        else:
+            k = min(Mlim, len(lamb))
+            lamb = lamb[0:k]
+            U = U[:,0:k]
+            Vt = Vt[0:k,:]
+    
+    return U, lamb, Vt
+
+
 
 def from_kindex(n):
     arr = []
@@ -138,7 +167,7 @@ def MPA(state, N):
     return As
 
 
-def MPA_B_form(state, N):
+def MPA_B_form(state, N, Mlim):
 
     Bs = []
     lambs = []
@@ -154,12 +183,12 @@ def MPA_B_form(state, N):
 
     
     ######################first split
-    U, lamb, Vt = svd(Psi)
+    U, lamb, Vt = svd(Psi, Mlim)
     Ms.append(len(lamb))
 
     #Assingn A
     A = np.einsum("ij->ji", U)
-    B = np.einsum("ij,jk->ik", np.diag(1/lamb), A)
+    B = A
     Bs.append(B)
     lambs.append(lamb)
 
@@ -175,7 +204,7 @@ def MPA_B_form(state, N):
                 Psi[n1,n2] = lamb[k] * Vt[k, 2**(N-1-i) * s + n2]
         
         #svd
-        U, lamb, Vt = svd(Psi)
+        U, lamb, Vt = svd(Psi, Mlim)
         Ms.append(len(lamb))
     
         #Assign A
@@ -184,8 +213,9 @@ def MPA_B_form(state, N):
             for k1 in range(Ms[-2]):
                 for k2 in range(Ms[-1]):
                     A[k1,k2,s] = U[to_kindex([k1,s]), k2]
+
         
-        B = np.einsum("ij,jk->ik", np.diag(1/lamb), A)
+        B = np.einsum("ij,jks->iks", np.diag(1/lambs[-1]), A)
         Bs.append(B)
         lambs.append(lamb)
     
@@ -194,10 +224,9 @@ def MPA_B_form(state, N):
     for s in range(2):
         for k in range(Ms[-1]):
             A[k,s] = lamb[k] * Vt[k, s]
-    
-    B = np.einsum("ij,jk->ik", np.diag(1/lamb), A)
+        
+    B = np.einsum("ij,js->is", np.diag(1/lambs[-1]), A)
     Bs.append(B)
-    lambs.append(lamb)
 
     return Bs, lambs
 
@@ -215,12 +244,31 @@ for i in range(N):
         print(As[i][:,0].shape)"""
 
 
-"""v = np.array([0,1,1,0])
-M = np.array([[0,1,0,1], [0,0,4,4], [3,2,3,6], [1,0,0,1]])
 
-print(np.einsum("i,ij->ij", v, M))
-print(np.einsum("ij,jk->ik", np.diag(v), M))"""
 
+"""N = 4
+s1 = np.random.normal(0,1,2**N); s1 = s1/np.linalg.norm(s1)
+
+N = 2
+s1 = [0,1,0,0]
+
+Bs, lambs = MPA_B_form(s1,N)
+
+for i in range(N):
+    try:
+        print(Bs[i][:,:,0].shape)
+        print(np.diag(lambs[i]).shape)
+    except:
+        try:
+            print(Bs[i][:,0].shape)
+            print(np.diag(lambs[i]).shape)
+        except IndexError:
+            pass
+
+
+Bs, lambs = MPA_B_form([0,1,0,0],2)
+print(Bs)
+"""
 
 
 
