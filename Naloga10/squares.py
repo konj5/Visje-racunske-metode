@@ -46,7 +46,7 @@ def tensor_renormalize(A, q, Mlim):
             Ad[q,q] = A[i//q, j//q, j%q, i%q]
 
     U,S,Vt = np.linalg.svd(Ad, full_matrices=False)
-    
+    pass
 
 
 
